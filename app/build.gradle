@@ -20,6 +20,10 @@ android {
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
   }
 
+  buildTypes.debug {
+    applicationIdSuffix ".debug"
+  }
+
   // Configure Release Signing
   def props = new Properties()
   rootProject.file("local.properties").withReader { props.load(it) }
@@ -53,9 +57,13 @@ dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$RXJAVA_VERSION"
   implementation "com.google.dagger:dagger:$DAGGER_VERSION"
   kapt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+  implementation "com.jakewharton.threetenabp:threetenabp:$THREETEN_ANDROID_VERSION"
+  implementation "com.jakewharton.timber:timber:$TIMBER_VERSION"
 
   testImplementation junit5()
   testCompileOnly junit5EmbeddedRuntime()
+  testImplementation "org.threeten:threetenbp:$THREETEN_JAVA_VERSION"
+
   androidTestImplementation "com.android.support.test:runner:$SUPPORT_TEST_VERSION"
   androidTestImplementation "com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"
 }
