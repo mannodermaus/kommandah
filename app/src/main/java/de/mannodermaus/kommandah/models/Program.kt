@@ -23,37 +23,55 @@ import java.util.*
  *  }
  * </pre></code>
  */
-class Program(instructions: InstructionStack) : Iterable<Program.Line> {
+class Program(
+    instructions: Instructions,
+    // Container for pop/push instructions
+    private val stack: Stack<Int> = Stack())
+  : Iterable<Program.Line> {
 
   // Associate each instruction with a reference to the Program
   private val instructions: Lines = instructions.entries
       .associate { it.key to Line(it.value) }
 
   // Program Counter
-  private var pc: Long = 0
-
-  // Destination for pop/push instructions
-  private val stack: Stack<Long> = Stack()
+  private var pc: Int = 0
 
   override fun iterator(): Iterator<Line> = ProgramIterator()
+
+  operator fun get(i: Int): Line? = instructions[i]
+
+  /**
+   * Synchronously executes the Program.
+   * Returns the output of itself as a List of events.
+   */
+  fun run(): List<OutputEvent> = this.map { line -> line.execute() }
+      .takeWhile { it !is OutputEvent.Error }
 
   /**
    * Implementor of the Iterable interface for Program objects.
    */
   private inner class ProgramIterator : Iterator<Line> {
 
+    private var stopped = false
+
     // The iterator will always keep going until stopped by the Interpreter
-    override fun hasNext(): Boolean = true
+    override fun hasNext(): Boolean = !stopped
 
     // Access the next value in the stack
-    override fun next(): Line = instructions[pc++] ?: throw IllegalArgumentException("Invalid operation at index ${pc - 1}")
+    override fun next(): Line {
+      val line = instructions[pc++] ?: throw IllegalArgumentException("Invalid operation at index ${pc - 1}")
+      if (line.instruction is Stop) {
+        stopped = true
+      }
+      return line
+    }
   }
 
   /**
    * Representation of a single line inside a program,
    * backed by a low-level Instruction.
    */
-  inner class Line(private val instruction: Instruction) {
+  inner class Line(val instruction: Instruction) {
     fun execute(): OutputEvent {
       try {
         when (instruction) {
@@ -61,7 +79,9 @@ class Program(instructions: InstructionStack) : Iterable<Program.Line> {
             // "Pop two values from the stack, multiply them, push the result back"
             val value1 = stack.pop()
             val value2 = stack.pop()
-            stack.push(value1 * value2)
+            val result = value1 * value2
+            stack.push(result)
+            return OutputEvent.Calc(instruction, result)
           }
 
           is Call ->
@@ -80,7 +100,6 @@ class Program(instructions: InstructionStack) : Iterable<Program.Line> {
             // "Pop one argument from the stack, print it out"
             val argument = stack.pop()
             return OutputEvent.Log(instruction, "$argument")
-
           }
 
           is Push ->
@@ -89,7 +108,7 @@ class Program(instructions: InstructionStack) : Iterable<Program.Line> {
         }
 
         // Default result value
-        return OutputEvent.Tick(instruction)
+        return OutputEvent.Void(instruction)
 
       } catch (cause: Exception) {
         // Assume construction error by the user
@@ -99,4 +118,4 @@ class Program(instructions: InstructionStack) : Iterable<Program.Line> {
   }
 }
 
-private typealias Lines = Map<Long, Program.Line>
+private typealias Lines = Map<Int, Program.Line>

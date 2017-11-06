@@ -63,6 +63,7 @@ dependencies {
   testImplementation junit5()
   testCompileOnly junit5EmbeddedRuntime()
   testImplementation "org.threeten:threetenbp:$THREETEN_JAVA_VERSION"
+  testImplementation "org.assertj:assertj-core:$ASSERTJ_VERSION"
 
   androidTestImplementation "com.android.support.test:runner:$SUPPORT_TEST_VERSION"
   androidTestImplementation "com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"

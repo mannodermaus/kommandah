@@ -17,7 +17,6 @@ class RuntimeModule {
 
 private class NaiveInterpreter : Interpreter {
   override fun execute(program: Program, env: ExecutionEnvironment): Flowable<OutputEvent> =
-      Flowable.fromIterable(program)
+      Flowable.fromIterable(program.run())
           .delay(env.speed.toMillis(), TimeUnit.MILLISECONDS)
-          .map { it.execute() }
 }
