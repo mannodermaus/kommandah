@@ -23,9 +23,30 @@ sealed class OutputEvent {
    * An error occurred at the given instruction,
    * and execution was halted because of it.
    */
-  data class Error(val instruction: Instruction, val cause: Exception) : OutputEvent()
+  data class Error(val instruction: Instruction, val cause: Throwable) : OutputEvent()
 
   object Completed : OutputEvent()
+}
+
+/**
+ * Representation of a Program's "return status",
+ * i.e. if execution was successful or not.
+ */
+sealed class ExitCode {
+  /**
+   * Not returned yet (either "not started" or "still running")
+   */
+  object None : ExitCode()
+
+  /**
+   * Successful execution
+   */
+  object Success : ExitCode()
+
+  /**
+   * Failed with error
+   */
+  data class Error(val cause: Throwable) : ExitCode()
 }
 
 data class ExecutionEnvironment(

@@ -6,6 +6,7 @@ import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.OutputEvent
 import de.mannodermaus.kommandah.models.Program
 import io.reactivex.Flowable
+import io.reactivex.rxkotlin.toFlowable
 import java.util.concurrent.TimeUnit
 
 @Module
@@ -17,6 +18,6 @@ class RuntimeModule {
 
 private class NaiveInterpreter : Interpreter {
   override fun execute(program: Program, env: ExecutionEnvironment): Flowable<OutputEvent> =
-      Flowable.fromIterable(program.run())
+      program.run().toFlowable()
           .delay(env.speed.toMillis(), TimeUnit.MILLISECONDS)
 }

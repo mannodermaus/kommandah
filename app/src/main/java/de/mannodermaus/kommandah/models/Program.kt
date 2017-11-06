@@ -5,67 +5,91 @@ import java.util.*
 /**
  * Representation of a Program to be executed by an Interpreter.
  *
- * This class implements Iterable<> in a way that allows its iterator
- * to be usable in a loop, executing each instruction one by one:
+ * This class exposes its execution capabilities as a Sequence
+ * which allows it to be usable in a loop,
+ * executing each instruction one by one on-demand:
  *
  * <code><pre>
  *  val program = Program(instructions)
- *  val iterator = program.iterator()
  *
- *  while (iterator.hasNext()) {
- *    val line = iterator.next()
- *    val result = line.execute()
- *
- *    when (result) {
- *      is Error -> ...
+ *  for (output in program.run()) {
+ *    when (output) {
+ *      is OutputEvent.Log -> ...
+ *      is OutputEvent.Error -> ...
  *      else -> ...
  *    }
  *  }
  * </pre></code>
+ *
+ * Additionally, the Program can be executed "all at once",
+ * in a synchronous fashion,  using #runBlocking():
+ *
+ * <code><pre>
+ *  val program = Program(instructions)
+ *  val outputs = program.runBlocking()
+ * </pre></code>
  */
-class Program(
-    instructions: Instructions,
+data class Program(
+    private val instructions: Instructions,
     // Container for pop/push instructions
-    private val stack: Stack<Int> = Stack())
-  : Iterable<Program.Line> {
+    private val stack: Stack<Int> = Stack()) {
+
+  private var exitCode: ExitCode = ExitCode.None
 
   // Associate each instruction with a reference to the Program
-  private val instructions: Lines = instructions.entries
+  private val lines: Lines = instructions.entries
       .associate { it.key to Line(it.value) }
 
   // Program Counter
   private var pc: Int = 0
 
-  override fun iterator(): Iterator<Line> = ProgramIterator()
-
-  operator fun get(i: Int): Line? = instructions[i]
+  fun instructionAt(index: Int): Instruction? = instructions[index]
 
   /**
-   * Synchronously executes the Program.
-   * Returns the output of itself as a List of events.
+   * Used to display the execution status of the Program
    */
-  fun run(): List<OutputEvent> = this.map { line -> line.execute() }
-      .takeWhile { it !is OutputEvent.Error }
+  fun exitCode(): ExitCode = exitCode
 
   /**
-   * Implementor of the Iterable interface for Program objects.
+   * Returns the execution Sequence of the Program.
+   * Note: Since this is a Kotlin sequence, it is evaluated lazily.
+   * For a quick, synchronous way of executing the Program, use #runBlocking().
    */
-  private inner class ProgramIterator : Iterator<Line> {
+  fun run(): Sequence<OutputEvent> {
+    if (exitCode != ExitCode.None) {
+      // Already executed; requires a copy() to run again
+      throw AlreadyExecuted()
+    }
 
-    private var stopped = false
+    return generateSequence {
+      if (exitCode != ExitCode.None) {
+        // There is a distinct exit code; return null to finish sequence
+        null
 
-    // The iterator will always keep going until stopped by the Interpreter
-    override fun hasNext(): Boolean = !stopped
+      } else {
+        val line = lines[pc] ?: throw SegmentationFault(pc)
+        if (line.instruction is Stop) {
+          // Toggle successful execution
+          exitCode = ExitCode.Success
+        }
+        pc++
 
-    // Access the next value in the stack
-    override fun next(): Line {
-      val line = instructions[pc++] ?: throw IllegalArgumentException("Invalid operation at index ${pc - 1}")
-      if (line.instruction is Stop) {
-        stopped = true
+        val result = line.execute()
+        if (result is OutputEvent.Error) {
+          // Toggle erroneous execution
+          exitCode = ExitCode.Error(result.cause)
+        }
+        result
       }
-      return line
     }
   }
+
+  /**
+   * Synchronously runs the Program to completion, or until an Error is generated.
+   * After calling this, the exitCode() is guaranteed to be either
+   * ExitCode.Success or ExitCode.Error.
+   */
+  fun runBlocking(): List<OutputEvent> = run().toList()
 
   /**
    * Representation of a single line inside a program,
@@ -110,7 +134,7 @@ class Program(
         // Default result value
         return OutputEvent.Void(instruction)
 
-      } catch (cause: Exception) {
+      } catch (cause: Throwable) {
         // Assume construction error by the user
         return OutputEvent.Error(instruction, cause)
       }
