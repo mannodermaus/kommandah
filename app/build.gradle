@@ -1,0 +1,55 @@
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-android-extensions"
+apply plugin: "de.mannodermaus.android-junit5"
+
+final def keystoreFile = rootProject.file("kommandah.keystore")
+
+android {
+  compileSdkVersion COMPILE_SDK_VERSION
+  buildToolsVersion BUILD_TOOLS_VERSION
+
+  defaultConfig {
+    applicationId "de.mannodermaus.kommandah"
+    minSdkVersion MIN_SDK_VERSION
+    targetSdkVersion TARGET_SDK_VERSION
+    versionCode 1
+    versionName "1.0"
+
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+  }
+
+  // Configure Release Signing
+  def props = new Properties()
+  rootProject.file("local.properties").withReader { props.load(it) }
+
+  if (keystoreFile.exists()) {
+    signingConfigs {
+      release {
+        storeFile rootProject.file(keystoreFile)
+        storePassword props.getProperty("KEYSTORE_PASSWORD", "")
+        keyAlias props.getProperty("KEY_ALIAS", "")
+        keyPassword props.getProperty("KEY_PASSWORD", "")
+      }
+    }
+
+    buildTypes.release {
+      signingConfig signingConfigs.release
+    }
+  } else {
+    variantFilter {
+      it.setIgnore(it.buildType.name == "release")
+    }
+  }
+}
+
+dependencies {
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$KOTLIN_VERSION"
+  implementation "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
+  implementation "com.android.support.constraint:constraint-layout:$CONSTRAINT_LAYOUT_VERSION"
+
+  testImplementation junit5()
+  testCompileOnly junit5EmbeddedRuntime()
+  androidTestImplementation "com.android.support.test:runner:$SUPPORT_TEST_VERSION"
+  androidTestImplementation "com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"
+}
