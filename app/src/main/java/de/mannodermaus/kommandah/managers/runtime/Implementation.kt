@@ -19,5 +19,5 @@ private class NaiveInterpreter : Interpreter {
   override fun execute(program: Program, env: ExecutionEnvironment): Flowable<OutputEvent> =
       Flowable.fromIterable(program)
           .delay(env.speed.toMillis(), TimeUnit.MILLISECONDS)
-          .map { OutputEvent(it) }
+          .map { it.execute() }
 }

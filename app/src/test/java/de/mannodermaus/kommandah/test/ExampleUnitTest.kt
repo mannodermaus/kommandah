@@ -1,6 +1,6 @@
 package de.mannodermaus.kommandah.test
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.Test
 
 class ExampleUnitTest {

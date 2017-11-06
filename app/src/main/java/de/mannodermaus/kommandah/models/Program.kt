@@ -13,8 +13,8 @@ import java.util.*
  *  val iterator = program.iterator()
  *
  *  while (iterator.hasNext()) {
- *    val instruction = iterator.next()
- *    val result = instruction.execute()
+ *    val line = iterator.next()
+ *    val result = line.execute()
  *
  *    when (result) {
  *      is Error -> ...
@@ -23,7 +23,11 @@ import java.util.*
  *  }
  * </pre></code>
  */
-class Program(private val instructions: InstructionStack) : Iterable<Instruction> {
+class Program(instructions: InstructionStack) : Iterable<Program.Line> {
+
+  // Associate each instruction with a reference to the Program
+  private val instructions: Lines = instructions.entries
+      .associate { it.key to Line(it.value) }
 
   // Program Counter
   private var pc: Long = 0
@@ -31,25 +35,68 @@ class Program(private val instructions: InstructionStack) : Iterable<Instruction
   // Destination for pop/push instructions
   private val stack: Stack<Long> = Stack()
 
-  fun jumpTo(address: Long) {
-    this.pc = address
-  }
+  override fun iterator(): Iterator<Line> = ProgramIterator()
 
-  fun popFromStack(): Long = stack.pop()
-
-  fun pushToStack(first: Long, vararg more: Long) {
-    stack.push(first)
-    more.forEach { stack.push(it) }
-  }
-
-  override fun iterator(): Iterator<Instruction> = ProgramIterator()
-
-  private inner class ProgramIterator : Iterator<Instruction> {
+  /**
+   * Implementor of the Iterable interface for Program objects.
+   */
+  private inner class ProgramIterator : Iterator<Line> {
 
     // The iterator will always keep going until stopped by the Interpreter
     override fun hasNext(): Boolean = true
 
     // Access the next value in the stack
-    override fun next(): Instruction = instructions[pc++] ?: throw IllegalArgumentException("Invalid operation at index ${pc - 1}")
+    override fun next(): Line = instructions[pc++] ?: throw IllegalArgumentException("Invalid operation at index ${pc - 1}")
+  }
+
+  /**
+   * Representation of a single line inside a program,
+   * backed by a low-level Instruction.
+   */
+  inner class Line(private val instruction: Instruction) {
+    fun execute(): OutputEvent {
+      try {
+        when (instruction) {
+          is Mult -> {
+            // "Pop two values from the stack, multiply them, push the result back"
+            val value1 = stack.pop()
+            val value2 = stack.pop()
+            stack.push(value1 * value2)
+          }
+
+          is Call ->
+            // "Jump to the instruction at the given value"
+            pc = instruction.address
+
+          is Return ->
+            // "Pop one argument from the stack, jump to the instruction at that address"
+            pc = stack.pop()
+
+          is Stop ->
+            // "Stop the execution"
+            return OutputEvent.Completed
+
+          is Print -> {
+            // "Pop one argument from the stack, print it out"
+            val argument = stack.pop()
+            return OutputEvent.Log(instruction, "$argument")
+
+          }
+
+          is Push ->
+            // "Push the given argument to the stack"
+            stack.push(instruction.argument)
+        }
+
+        // Default result value
+        return OutputEvent.Tick(instruction)
+
+      } catch (cause: Exception) {
+        // Assume construction error by the user
+        return OutputEvent.Error(instruction, cause)
+      }
+    }
   }
 }
+
+private typealias Lines = Map<Long, Program.Line>
