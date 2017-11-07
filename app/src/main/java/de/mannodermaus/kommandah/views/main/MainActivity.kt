@@ -20,7 +20,7 @@ import javax.inject.Inject
 
 /**
  * The main screen of the application.
- * Allows for
+ * Allows the user to compose & execute their Program.
  */
 class MainActivity : AppCompatActivity(), HasSupportFragmentInjector {
 
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity(), HasSupportFragmentInjector {
     }
 
     // Setup RecyclerView
-    rvInstructions.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+    rvInstructions.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
     rvInstructions.adapter = listAdapter
 
     // Connect to ViewModel
