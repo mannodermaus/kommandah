@@ -1,10 +1,22 @@
 package de.mannodermaus.kommandah
 
+import android.app.Activity
 import android.app.Application
+import dagger.android.AndroidInjector
+import dagger.android.DispatchingAndroidInjector
+import dagger.android.HasActivityInjector
+import de.mannodermaus.kommandah.di.setupInjectors
+import de.mannodermaus.kommandah.managers.logging.LoggingInitializer
+import de.mannodermaus.kommandah.managers.time.TimeInitializer
+import javax.inject.Inject
 
-class App : Application() {
+class App : Application(), HasActivityInjector {
 
-  protected val component: AppComponent = createComponent()
+  @Inject lateinit var injector: DispatchingAndroidInjector<Activity>
+  @Inject lateinit var timeInitializer: TimeInitializer
+  @Inject lateinit var loggingInitializer: LoggingInitializer
+
+  val component: AppComponent = createComponent()
 
   protected fun createComponent() = DaggerAppComponent.builder()
       .buildTypeComponent(DaggerBuildTypeComponent.create())
@@ -14,8 +26,11 @@ class App : Application() {
   override fun onCreate() {
     super.onCreate()
 
-    // One-Time Initialization
-    component.timeInitializer().init()
-    component.loggingInitializer().init()
+    // Initialize Dependency Injection & perform one-time initialization
+    this.setupInjectors()
+    timeInitializer.init()
+    loggingInitializer.init()
   }
+
+  override fun activityInjector(): AndroidInjector<Activity> = injector
 }

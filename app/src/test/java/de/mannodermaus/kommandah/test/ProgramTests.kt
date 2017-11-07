@@ -77,20 +77,10 @@ class ProgramTests {
 @DisplayName("Instruction: MULT")
 class MultInstructionTests {
 
-  companion object {
-    val MULT = mapOf(0 to Mult, 1 to Stop)
-    val COMPLETED = OutputEvent.Completed
-  }
-
   /* Helpers */
 
   private fun createProgramWith(stack: Stack<Int>) =
-      Program(instructions = MULT, stack = stack)
-
-  private fun result(number: Int): OutputEvent =
-      OutputEvent.Calc(
-          instruction = Mult,
-          result = number)
+      Program(instructions = mapOf(0 to Mult, 1 to Stop), stack = stack)
 
   /* Tests */
 
@@ -98,16 +88,23 @@ class MultInstructionTests {
   @DisplayName("Works as expected with enough arguments on the Stack")
   fun multWorksWithEnoughArgumentsOnTheStack() {
     val program = createProgramWith(stackOf(5, 6))
+
     val results = program.runBlocking()
+
     program.assertExecutionSuccessful()
-    assertThat(results).containsOnly(result(30), COMPLETED)
+    assertThat(results)
+        .containsOnly(
+            OutputEvent.Calc(instruction = Mult, result = 30),
+            OutputEvent.Completed)
   }
 
   @Test
   @DisplayName("Throws when stack has only one element")
   fun multThrowsWithOnlyOneElementOnTheStack() {
     val program = createProgramWith(stackOf(1))
+
     program.runBlocking()
+
     program.assertExecutionFailedWith<EmptyStackException>()
   }
 
@@ -115,7 +112,9 @@ class MultInstructionTests {
   @DisplayName("Throws when stack is empty")
   fun multThrowsWhenStackIsEmpty() {
     val program = createProgramWith(stackOf())
+
     program.runBlocking()
+
     program.assertExecutionFailedWith<EmptyStackException>()
   }
 }
@@ -133,7 +132,9 @@ class CallInstructionTests {
         5 to Call(3),
         20 to Stop
     ))
+
     val results = program.runBlocking()
+
     program.assertExecutionSuccessful()
     assertThat(results
         .filter { it is OutputEvent.Void })
@@ -157,7 +158,9 @@ class ReturnInstructionTests {
             10 to Stop
         ),
         stack = stack)
+
     val results = program.runBlocking()
+
     program.assertExecutionSuccessful()
     assertThat(results)
         .containsExactly(
@@ -173,7 +176,9 @@ class ReturnInstructionTests {
             0 to Return,
             10 to Stop
         ))
+
     program.runBlocking()
+
     program.assertExecutionFailedWith<EmptyStackException>()
   }
 }
@@ -186,7 +191,9 @@ class StopInstructionTests {
   fun worksAsExpected() {
     // Don't move onto index #1, which is undefined
     val program = Program(mapOf(0 to Stop))
+
     val results = program.runBlocking()
+
     program.assertExecutionSuccessful()
     assertThat(results).containsOnly(OutputEvent.Completed)
   }
@@ -202,7 +209,9 @@ class PrintInstructionTests {
     val program = Program(
         instructions = mapOf(0 to Print, 1 to Stop),
         stack = stack)
+
     val results = program.runBlocking()
+
     program.assertExecutionSuccessful()
     assertThat(results).hasSize(2)
         .element(0)
@@ -212,11 +221,14 @@ class PrintInstructionTests {
   }
 
   @Test
+  @DisplayName("Throws on empty stack")
   fun throwsOnEmptyStack() {
     val program = Program(
         instructions = mapOf(0 to Print, 1 to Stop),
         stack = stackOf())
+
     program.runBlocking()
+
     program.assertExecutionFailedWith<EmptyStackException>()
   }
 }
@@ -225,6 +237,7 @@ class PrintInstructionTests {
 class PushInstructionTests {
 
   @Test
+  @DisplayName("Works as expected")
   fun worksAsExpected() {
     val stack = stackOf<Int>()
     val program = Program(
@@ -233,7 +246,9 @@ class PushInstructionTests {
             1 to Push(3550),
             2 to Stop),
         stack = stack)
+
     program.runBlocking()
+
     program.assertExecutionSuccessful()
     assertThat(stack).containsExactly(1234, 3550)
   }

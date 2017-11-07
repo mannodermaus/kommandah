@@ -3,7 +3,9 @@ package de.mannodermaus.kommandah.managers.logging
 import dagger.Module
 import dagger.Provides
 import timber.log.Timber
+import javax.inject.Singleton
 
+@Singleton
 @Module
 class DebugLoggingModule {
 

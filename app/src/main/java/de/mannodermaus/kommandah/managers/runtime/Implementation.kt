@@ -8,10 +8,12 @@ import de.mannodermaus.kommandah.models.Program
 import io.reactivex.Flowable
 import io.reactivex.rxkotlin.toFlowable
 import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 
 @Module
 class RuntimeModule {
 
+  @Singleton
   @Provides
   fun interpreter(): Interpreter = NaiveInterpreter()
 }

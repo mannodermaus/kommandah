@@ -1,19 +1,33 @@
 package de.mannodermaus.kommandah
 
 import dagger.Component
-import de.mannodermaus.kommandah.managers.logging.LoggingInitializer
+import dagger.android.AndroidInjectionModule
+import dagger.android.support.AndroidSupportInjectionModule
 import de.mannodermaus.kommandah.managers.runtime.RuntimeModule
-import de.mannodermaus.kommandah.managers.time.TimeInitializer
 import de.mannodermaus.kommandah.managers.time.TimeModule
+import de.mannodermaus.kommandah.managers.viewmodel.ViewModelModule
+import de.mannodermaus.kommandah.views.main.MainActivityModule
+import javax.inject.Singleton
 
+@Singleton
 @Component(modules = arrayOf(
+    // Contributed by dagger-android
+    AndroidInjectionModule::class,
+    AndroidSupportInjectionModule::class,
+
+    // Global modules
     AppModule::class,
     TimeModule::class,
-    RuntimeModule::class
+    RuntimeModule::class,
+    ViewModelModule::class,
+
+    // Screen-specific
+    MainActivityModule::class
+
 ), dependencies = arrayOf(
+    // Build Type-specific
     BuildTypeComponent::class
 ))
 interface AppComponent {
-  fun timeInitializer(): TimeInitializer
-  fun loggingInitializer(): LoggingInitializer
+  fun inject(app: App)
 }
