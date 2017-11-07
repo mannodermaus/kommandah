@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="@layout/main_activity"
+    android:id="@+id/toolbarBottom"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/main_bottomtoolbar_expanded_height"
+    android:orientation="vertical"
+    android:background="@color/main_background_bottomtoolbar"
+    app:layout_constraintTop_toBottomOf="@id/rvInstructions"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:behavior_hideable="false"
+    app:behavior_peekHeight="@dimen/main_bottomtoolbar_collapsed_height"
+    app:layout_behavior="@string/bottom_sheet_behavior">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="@dimen/main_bottomtoolbar_collapsed_height">
+
+    <ImageButton
+        android:id="@+id/buttonExecute"
+        style="@style/Widget.Kommandah.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_play"/>
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"/>
+
+    <ImageButton
+        android:id="@+id/buttonExpand"
+        style="@style/Widget.Kommandah.Button.Borderless"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_chevron_up"/>
+  </LinearLayout>
+
+  <ScrollView
+      android:id="@+id/consoleWindow"
+      android:layout_width="match_parent"
+      android:layout_height="@dimen/main_bottomtoolbar_diff_height"
+      style="@style/Widget.Kommandah.ConsoleWindow"
+      android:focusable="false"
+      android:fillViewport="true">
+
+    <TextView
+        android:id="@+id/tvConsoleWindow"
+        android:textAppearance="@style/TextAppearance.Kommandah.ConsoleOutput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/main_consolewindow_padding"
+        android:padding="@dimen/main_consolewindow_padding"
+        tools:text="> Example Output\n> Looking Smooth…\n> TOTALLY RAD"
+        android:gravity="bottom"/>
+  </ScrollView>
+</LinearLayout>

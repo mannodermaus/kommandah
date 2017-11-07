@@ -1,5 +1,6 @@
 package de.mannodermaus.kommandah.models
 
+import android.support.annotation.CheckResult
 import java.util.*
 
 /**
@@ -22,7 +23,7 @@ import java.util.*
  * </pre></code>
  *
  * Additionally, the Program can be executed "all at once",
- * in a synchronous fashion,  using #runBlocking():
+ * in a synchronous fashion,  using [runBlocking]:
  *
  * <code><pre>
  *  val program = Program(instructions)
@@ -31,13 +32,19 @@ import java.util.*
  */
 data class Program(
     private val instructions: Instructions,
-    // Container for pop/push instructions
+    // Storage for "virtual variables"
     private val stack: Stack<Int> = Stack()) {
 
-  private var exitCode: ExitCode = ExitCode.None
+  /**
+   * The result of the Program's execution, assigned only after it was fully executed.
+   */
+  var exitCode: ExitCode = ExitCode.None
+    private set(value) {}
 
-  // Associate each instruction with a reference to the Program
-  private val lines: Lines = instructions.entries
+  /**
+   * Internal mapping of Instructions to a type that knows how to execute them.
+   */
+  private val lines: Map<Int, Line> = instructions.entries
       .associate { it.key to Line(it.value) }
 
   // Program Counter
@@ -46,15 +53,10 @@ data class Program(
   fun instructionAt(index: Int): Instruction? = instructions[index]
 
   /**
-   * Used to display the execution status of the Program
+   * Returns the execution of the Program as a lazy Sequence.
+   * Note: For a quick, synchronous way of executing the Program, use [runBlocking].
    */
-  fun exitCode(): ExitCode = exitCode
-
-  /**
-   * Returns the execution Sequence of the Program.
-   * Note: Since this is a Kotlin sequence, it is evaluated lazily.
-   * For a quick, synchronous way of executing the Program, use #runBlocking().
-   */
+  @CheckResult
   fun run(): Sequence<OutputEvent> {
     if (exitCode != ExitCode.None) {
       // Already executed; requires a copy() to run again
@@ -86,8 +88,8 @@ data class Program(
 
   /**
    * Synchronously runs the Program to completion, or until an Error is generated.
-   * After calling this, the exitCode() is guaranteed to be either
-   * ExitCode.Success or ExitCode.Error.
+   * After calling this, the [exitCode] is guaranteed to be either
+   * [ExitCode.Success] or [ExitCode.Error].
    */
   fun runBlocking(): List<OutputEvent> = run().toList()
 
@@ -95,7 +97,7 @@ data class Program(
    * Representation of a single line inside a program,
    * backed by a low-level Instruction.
    */
-  inner class Line(val instruction: Instruction) {
+  private inner class Line(val instruction: Instruction) {
     fun execute(): OutputEvent {
       try {
         when (instruction) {
@@ -141,5 +143,3 @@ data class Program(
     }
   }
 }
-
-private typealias Lines = Map<Int, Program.Line>

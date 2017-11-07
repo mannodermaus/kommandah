@@ -23,6 +23,11 @@
     <item name="android:textSize">@dimen/text_large</item>
   </style>
 
+  <style name="TextAppearance.Kommandah.ConsoleOutput">
+    <item name="android:fontFamily">monospace</item>
+    <item name="android:textColor">@color/text_console</item>
+  </style>
+
   <!-- Widget Styles -->
 
   <style name="Widget.Kommandah" parent="AppTheme"></style>
@@ -30,5 +35,13 @@
   <style name="Widget.Kommandah.ImageView.DragHandle">
     <item name="android:tint">@color/text_primary</item>
     <item name="android:alpha">0.2</item>
+  </style>
+
+  <style name="Widget.Kommandah.Button" parent="Widget.AppCompat.Button"></style>
+  <style name="Widget.Kommandah.Button.Borderless" parent="Widget.AppCompat.Button.Borderless.Colored">
+  </style>
+
+  <style name="Widget.Kommandah.ConsoleWindow">
+    <item name="android:background">@color/main_background_console</item>
   </style>
 </resources>

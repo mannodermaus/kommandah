@@ -4,7 +4,6 @@ import android.arch.lifecycle.ViewModel
 import dagger.MapKey
 import kotlin.reflect.KClass
 
-
 /**
  * Used with Dagger to bind a ViewModel into a Map,
  * so we can inject dependencies into it.

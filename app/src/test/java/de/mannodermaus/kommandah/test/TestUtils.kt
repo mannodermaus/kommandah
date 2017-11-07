@@ -14,12 +14,12 @@ fun <E> stackOf(vararg args: E) = Stack<E>().apply {
 /* Extensions */
 
 inline fun <reified T : Exception> Program.assertExecutionFailedWith() {
-  Assertions.assertThat(this.exitCode())
+  Assertions.assertThat(this.exitCode)
       .isInstanceOf(ExitCode.Error::class.java)
       .extracting("cause")
       .hasOnlyOneElementSatisfying { it is T }
 }
 
 fun Program.assertExecutionSuccessful() {
-  Assertions.assertThat(this.exitCode()).isEqualTo(ExitCode.Success)
+  Assertions.assertThat(this.exitCode).isEqualTo(ExitCode.Success)
 }

@@ -8,3 +8,20 @@ import de.mannodermaus.kommandah.models.Instruction
  * there are "empty cells" in the program in-between routines or blocks.
  */
 data class InstructionData(val index: Int, val instruction: Instruction?)
+
+/**
+ * Different states that the execution of a Program can be in.
+ */
+enum class ExecutionStatus { PAUSED, RUNNING }
+
+sealed class ConsoleEvent {
+  /**
+   * Clear Console
+   */
+  object Clear : ConsoleEvent()
+
+  /**
+   * Message to print in the Console
+   */
+  data class Message(val message: String) : ConsoleEvent()
+}

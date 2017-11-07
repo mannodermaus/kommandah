@@ -8,6 +8,9 @@
   <color name="accent_dark">#c8b900</color>
   <color name="text_primary">#000000</color>
   <color name="text_logo">#ffffff</color>
+  <color name="text_console">@color/accent</color>
 
   <color name="main_background">#e0e0e0</color>
+  <color name="main_background_bottomtoolbar">@color/main_background</color>
+  <color name="main_background_console">#080808</color>
 </resources>

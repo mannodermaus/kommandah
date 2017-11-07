@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.utils
+package de.mannodermaus.kommandah.utils.extensions
 
 import android.content.Context
 import android.graphics.drawable.Drawable
