@@ -1,11 +1,34 @@
 <resources>
-
-  <!-- Base application theme. -->
   <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-    <!-- Customize your theme here. -->
-    <item name="colorPrimary">@color/colorPrimary</item>
-    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-    <item name="colorAccent">@color/colorAccent</item>
+    <item name="colorPrimary">@color/primary</item>
+    <item name="colorPrimaryDark">@color/primary_dark</item>
+    <item name="colorAccent">@color/accent</item>
   </style>
 
+  <!-- Text Appearances -->
+  <style name="TextAppearance.Kommandah" parent="TextAppearance.AppCompat">
+    <item name="android:textSize">@dimen/text_medium</item>
+  </style>
+
+  <style name="TextAppearance.Kommandah.Logo">
+    <item name="android:fontFamily">@font/desib</item>
+    <item name="android:textSize">@dimen/text_logo</item>
+    <item name="android:textColor">@color/text_logo</item>
+  </style>
+
+  <style name="TextAppearance.Kommandah.ListItemSmall">
+  </style>
+
+  <style name="TextAppearance.Kommandah.ListItemBig">
+    <item name="android:textSize">@dimen/text_large</item>
+  </style>
+
+  <!-- Widget Styles -->
+
+  <style name="Widget.Kommandah" parent="AppTheme"></style>
+  <style name="Widget.Kommandah.ImageView"></style>
+  <style name="Widget.Kommandah.ImageView.DragHandle">
+    <item name="android:tint">@color/text_primary</item>
+    <item name="android:alpha">0.2</item>
+  </style>
 </resources>

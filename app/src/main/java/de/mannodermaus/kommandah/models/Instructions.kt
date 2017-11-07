@@ -13,7 +13,9 @@ typealias Instructions = Map<Int, Instruction>
 /**
  * The different instructions understood by the Interpreter.
  */
-sealed class Instruction(protected val operator: String)
+sealed class Instruction(protected val operator: String) {
+  open fun describe(): String = operator
+}
 
 /**
  * Pop two arguments from the stack, multiply them & push the result to the stack
@@ -23,7 +25,9 @@ object Mult : Instruction(operator = "MULT")
 /**
  * Jump to the instruction at index <i>address</i>
  */
-data class Call(val address: Int) : Instruction(operator = "CALL")
+data class Call(val address: Int) : Instruction(operator = "CALL") {
+  override fun describe(): String = "${super.describe()} $address"
+}
 
 /**
  * Pop one argument from the stack, jump to the instruction at that index
@@ -43,7 +47,9 @@ object Print : Instruction(operator = "PRINT")
 /**
  * Push the given argument to the stack
  */
-data class Push(val argument: Int) : Instruction(operator = "PUSH")
+data class Push(val argument: Int) : Instruction(operator = "PUSH") {
+  override fun describe(): String = "${super.describe()} $argument"
+}
 
 /* Extensions */
 
