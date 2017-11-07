@@ -48,16 +48,30 @@ android {
   }
 }
 
+configurations.all {
+  resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+    if (details.requested.group == "com.android.support") {
+      // "All support libraries must use the same version",
+      // yet not all can be automatically updated through transitive dependencies.
+      details.useVersion SUPPORT_LIBRARY_VERSION
+    }
+  }
+}
+
 dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$KOTLIN_VERSION"
   implementation "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
   implementation "com.android.support:recyclerview-v7:$SUPPORT_LIBRARY_VERSION"
   implementation "com.android.support.constraint:constraint-layout:$CONSTRAINT_LAYOUT_VERSION"
+  implementation "android.arch.lifecycle:extensions:$ARCHITECTURE_COMPONENTS_VERSION"
+  implementation "android.arch.lifecycle:reactivestreams:$ARCHITECTURE_COMPONENTS_VERSION"
 
   implementation "io.reactivex.rxjava2:rxjava:$RXJAVA_VERSION"
   implementation "io.reactivex.rxjava2:rxkotlin:$RXKOTLIN_VERSION"
-  implementation "com.google.dagger:dagger:$DAGGER_VERSION"
+  implementation "com.google.dagger:dagger-android:$DAGGER_VERSION"
+  implementation "com.google.dagger:dagger-android-support:$DAGGER_VERSION"
   kapt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+  kapt "com.google.dagger:dagger-android-processor:$DAGGER_VERSION"
   implementation "com.jakewharton.threetenabp:threetenabp:$THREETEN_ANDROID_VERSION"
   implementation "com.jakewharton.timber:timber:$TIMBER_VERSION"
 
@@ -65,6 +79,7 @@ dependencies {
   testCompileOnly junit5EmbeddedRuntime()
   testImplementation "org.threeten:threetenbp:$THREETEN_JAVA_VERSION"
   testImplementation "org.assertj:assertj-core:$ASSERTJ_VERSION"
+  testImplementation "android.arch.core:core-testing:$ARCHITECTURE_COMPONENTS_VERSION"
 
   androidTestImplementation "com.android.support.test:runner:$SUPPORT_TEST_VERSION"
   androidTestImplementation "com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"
