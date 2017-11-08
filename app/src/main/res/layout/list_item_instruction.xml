@@ -69,7 +69,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         style="@style/Widget.Kommandah.ImageView.DragHandle"
-        app:srcCompat="@drawable/ic_menu"
+        app:srcCompat="@drawable/ic_reorder_horizontal"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

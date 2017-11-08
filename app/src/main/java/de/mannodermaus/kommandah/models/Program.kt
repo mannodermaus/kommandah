@@ -38,14 +38,15 @@ data class Program(
   /**
    * The result of the Program's execution, assigned only after it was fully executed.
    */
-  var exitCode: ExitCode = ExitCode.None
-    private set(value) {}
+  private var _exitCode: ExitCode = ExitCode.None
+  val exitCode: ExitCode
+    get() = _exitCode
 
   /**
    * Internal mapping of Instructions to a type that knows how to execute them.
    */
   private val lines: Map<Int, Line> = instructions.entries
-      .associate { it.key to Line(it.value) }
+      .associate { it.key to Line(it.key, it.value) }
 
   // Program Counter
   private var pc: Int = 0
@@ -57,13 +58,13 @@ data class Program(
    * Note: For a quick, synchronous way of executing the Program, use [runBlocking].
    */
   @CheckResult
-  fun run(): Sequence<OutputEvent> {
+  fun run(): Sequence<ProgramOutput> {
     if (exitCode != ExitCode.None) {
       // Already executed; requires a copy() to run again
       throw AlreadyExecuted()
     }
 
-    return generateSequence {
+    return sequenceOf(ProgramOutput.Started(instructions.size)) + generateSequence {
       if (exitCode != ExitCode.None) {
         // There is a distinct exit code; return null to finish sequence
         null
@@ -72,14 +73,14 @@ data class Program(
         val line = lines[pc] ?: throw SegmentationFault(pc)
         if (line.instruction is Stop) {
           // Toggle successful execution
-          exitCode = ExitCode.Success
+          _exitCode = ExitCode.Success
         }
         pc++
 
         val result = line.execute()
-        if (result is OutputEvent.Error) {
+        if (result is ProgramOutput.Error) {
           // Toggle erroneous execution
-          exitCode = ExitCode.Error(result.cause)
+          _exitCode = ExitCode.Error(result.cause)
         }
         result
       }
@@ -91,14 +92,14 @@ data class Program(
    * After calling this, the [exitCode] is guaranteed to be either
    * [ExitCode.Success] or [ExitCode.Error].
    */
-  fun runBlocking(): List<OutputEvent> = run().toList()
+  fun runBlocking(): List<ProgramOutput> = run().toList()
 
   /**
    * Representation of a single line inside a program,
    * backed by a low-level Instruction.
    */
-  private inner class Line(val instruction: Instruction) {
-    fun execute(): OutputEvent {
+  private inner class Line(val index: Int, val instruction: Instruction) {
+    fun execute(): ProgramOutput {
       try {
         when (instruction) {
           is Mult -> {
@@ -107,7 +108,7 @@ data class Program(
             val value2 = stack.pop()
             val result = value1 * value2
             stack.push(result)
-            return OutputEvent.Calc(instruction, result)
+            return ProgramOutput.Calc(instruction, result)
           }
 
           is Call ->
@@ -120,12 +121,12 @@ data class Program(
 
           is Stop ->
             // "Stop the execution"
-            return OutputEvent.Completed
+            return ProgramOutput.Completed
 
           is Print -> {
             // "Pop one argument from the stack, print it out"
             val argument = stack.pop()
-            return OutputEvent.Log(instruction, "$argument")
+            return ProgramOutput.Log(instruction, line = index, message = "$argument")
           }
 
           is Push ->
@@ -134,11 +135,11 @@ data class Program(
         }
 
         // Default result value
-        return OutputEvent.Void(instruction)
+        return ProgramOutput.Void(instruction)
 
       } catch (cause: Throwable) {
         // Assume construction error by the user
-        return OutputEvent.Error(instruction, cause)
+        return ProgramOutput.Error(cause, instruction)
       }
     }
   }

@@ -2,9 +2,11 @@ package de.mannodermaus.kommandah.utils.extensions
 
 import android.support.annotation.ColorRes
 import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import android.support.annotation.StyleRes
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
+import android.widget.TextView
 import de.mannodermaus.kommandah.R
 
 /* Toolbar */
@@ -43,4 +45,16 @@ internal constructor(val activity: AppCompatActivity) {
 
 fun AppCompatActivity.toolbar(config: ToolbarConfig.() -> Unit) {
   config.invoke(ToolbarConfig(this))
+}
+
+/* TextView */
+
+fun TextView.appendLine(line: CharSequence = "") = this.also {
+  append(line)
+  append("\n")
+}
+
+fun TextView.appendLine(@StringRes res: Int, vararg args: Any) = this.also {
+  append(resources.getString(res, *args))
+  append("\n")
 }

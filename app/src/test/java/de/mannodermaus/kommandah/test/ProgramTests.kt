@@ -3,7 +3,7 @@ package de.mannodermaus.kommandah.test
 import de.mannodermaus.kommandah.models.AlreadyExecuted
 import de.mannodermaus.kommandah.models.Call
 import de.mannodermaus.kommandah.models.Mult
-import de.mannodermaus.kommandah.models.OutputEvent
+import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.models.Print
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.Push
@@ -41,7 +41,7 @@ class ProgramTests {
   }
 
   @Test
-  @DisplayName("Can't execute more than once")
+  @DisplayName("Can't runProgram more than once")
   fun cantExecuteMoreThanOnce() {
     val program = Program(mapOf(
         0 to Push(1009),
@@ -94,8 +94,9 @@ class MultInstructionTests {
     program.assertExecutionSuccessful()
     assertThat(results)
         .containsOnly(
-            OutputEvent.Calc(instruction = Mult, result = 30),
-            OutputEvent.Completed)
+            ProgramOutput.Started,
+            ProgramOutput.Calc(instruction = Mult, result = 30),
+            ProgramOutput.Completed)
   }
 
   @Test
@@ -137,7 +138,7 @@ class CallInstructionTests {
 
     program.assertExecutionSuccessful()
     assertThat(results
-        .filter { it is OutputEvent.Void })
+        .filter { it is ProgramOutput.Void })
         .extracting("instruction")
         .extracting("address")
         .containsExactly(5, 3, 20)
@@ -164,8 +165,9 @@ class ReturnInstructionTests {
     program.assertExecutionSuccessful()
     assertThat(results)
         .containsExactly(
-            OutputEvent.Void(Return),
-            OutputEvent.Completed)
+            ProgramOutput.Started,
+            ProgramOutput.Void(Return),
+            ProgramOutput.Completed)
   }
 
   @Test
@@ -195,7 +197,7 @@ class StopInstructionTests {
     val results = program.runBlocking()
 
     program.assertExecutionSuccessful()
-    assertThat(results).containsOnly(OutputEvent.Completed)
+    assertThat(results).containsOnly(ProgramOutput.Started, ProgramOutput.Completed)
   }
 }
 
@@ -213,9 +215,9 @@ class PrintInstructionTests {
     val results = program.runBlocking()
 
     program.assertExecutionSuccessful()
-    assertThat(results).hasSize(2)
-        .element(0)
-        .isInstanceOf(OutputEvent.Log::class.java)
+    assertThat(results).hasSize(3)
+        .element(1)
+        .isInstanceOf(ProgramOutput.Log::class.java)
         .extracting("message")
         .hasOnlyOneElementSatisfying { it == "1337" }
   }

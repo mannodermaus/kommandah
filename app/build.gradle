@@ -73,12 +73,14 @@ dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$RXJAVA_VERSION"
   implementation "io.reactivex.rxjava2:rxkotlin:$RXKOTLIN_VERSION"
   implementation "io.reactivex.rxjava2:rxandroid:$RXANDROID_VERSION"
+  implementation "com.jakewharton.rxbinding2:rxbinding-kotlin:$RXBINDING_VERSION"
+  implementation "com.jakewharton.threetenabp:threetenabp:$THREETEN_ANDROID_VERSION"
+  implementation "com.jakewharton.timber:timber:$TIMBER_VERSION"
+
   implementation "com.google.dagger:dagger-android:$DAGGER_VERSION"
   implementation "com.google.dagger:dagger-android-support:$DAGGER_VERSION"
   kapt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
   kapt "com.google.dagger:dagger-android-processor:$DAGGER_VERSION"
-  implementation "com.jakewharton.threetenabp:threetenabp:$THREETEN_ANDROID_VERSION"
-  implementation "com.jakewharton.timber:timber:$TIMBER_VERSION"
 
   testImplementation junit5()
   testCompileOnly junit5EmbeddedRuntime()

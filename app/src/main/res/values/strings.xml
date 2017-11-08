@@ -1,3 +1,9 @@
 <resources>
   <string name="app_name">kommandah</string>
+
+  <string name="main_console_separator" translatable="false">----------------</string>
+  <string name="main_console_started">Running Program (%d instructions…)</string>
+  <string name="main_console_finished">Finished Execution successfully.</string>
+  <string name="main_console_log">&gt; PRINT (L%1$d): %2$s</string>
+  <string name="main_console_error">ERROR during Execution:</string>
 </resources>
