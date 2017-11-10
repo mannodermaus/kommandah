@@ -14,20 +14,30 @@ import io.reactivex.subjects.BehaviorSubject
 import java.util.*
 import javax.inject.Inject
 
+private val WORKING_EXAMPLE_PROGRAM = listOf(
+    Instruction.Push(1337),
+    Instruction.Print,
+    Instruction.Push(1000),
+    Instruction.Push(10),
+    Instruction.Mult,
+    Instruction.Print,
+    Instruction.Stop
+)
+
+private val THROWS_EXCEPTION_AT_LINE_1 = listOf(
+    Instruction.Push(1337),
+    Instruction.Mult,
+    Instruction.Push(10),
+    Instruction.Print,
+    Instruction.Stop
+)
+
 class MainViewModel
 @Inject constructor(private val interpreter: Interpreter) : ViewModel() {
 
   // TODO Implement properly
   private val instructionData: BehaviorSubject<List<Instruction>> =
-      BehaviorSubject.createDefault(mutableListOf(
-          Instruction.Push(1337),
-          Instruction.Print,
-          Instruction.Push(1000),
-          Instruction.Push(10),
-          Instruction.Mult,
-          Instruction.Print,
-          Instruction.Stop
-      ))
+      BehaviorSubject.createDefault(THROWS_EXCEPTION_AT_LINE_1)
 
   private val executionStatus: BehaviorSubject<ExecutionStatus> =
       BehaviorSubject.createDefault(ExecutionStatus.PAUSED)

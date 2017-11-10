@@ -28,7 +28,7 @@ sealed class ProgramOutput {
    * An error occurred at the given instruction,
    * and execution was halted because of it.
    */
-  data class Error(val cause: Throwable, val instruction: Instruction? = null) : ProgramOutput()
+  data class Error(val cause: ProgramException, val instruction: Instruction? = null) : ProgramOutput()
 
   /**
    * Execution finished.
@@ -54,7 +54,7 @@ sealed class ExitCode {
   /**
    * Failed with error
    */
-  data class Error(val cause: Throwable) : ExitCode()
+  data class Error(val cause: ProgramException) : ExitCode()
 }
 
 data class ExecutionEnvironment(

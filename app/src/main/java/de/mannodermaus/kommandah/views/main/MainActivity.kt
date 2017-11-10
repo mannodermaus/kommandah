@@ -162,8 +162,9 @@ class MainActivity : AppCompatActivity(),
     }
   }
 
-  /* ItemTouchHelper Callback */
-
+  /**
+   * Implementor of list item interactions (drag-and-drop & swipe-to-dismiss)
+   */
   private inner class ListItemTouchCallback : ItemTouchHelper.SimpleCallback(
       ItemTouchHelper.UP or ItemTouchHelper.DOWN,
       ItemTouchHelper.START or ItemTouchHelper.END) {

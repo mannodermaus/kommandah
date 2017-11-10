@@ -1,14 +1,14 @@
 package de.mannodermaus.kommandah.test
 
-import de.mannodermaus.kommandah.models.AlreadyExecuted
-import de.mannodermaus.kommandah.models.Call
-import de.mannodermaus.kommandah.models.Mult
-import de.mannodermaus.kommandah.models.ProgramOutput
-import de.mannodermaus.kommandah.models.Print
+import de.mannodermaus.kommandah.models.Instruction.Call
+import de.mannodermaus.kommandah.models.Instruction.Mult
+import de.mannodermaus.kommandah.models.Instruction.Print
+import de.mannodermaus.kommandah.models.Instruction.Push
+import de.mannodermaus.kommandah.models.Instruction.Return
+import de.mannodermaus.kommandah.models.Instruction.Stop
 import de.mannodermaus.kommandah.models.Program
-import de.mannodermaus.kommandah.models.Push
-import de.mannodermaus.kommandah.models.Return
-import de.mannodermaus.kommandah.models.Stop
+import de.mannodermaus.kommandah.models.ProgramException
+import de.mannodermaus.kommandah.models.ProgramOutput
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -53,7 +53,7 @@ class ProgramTests {
     program.assertExecutionSuccessful()
 
     // Another attempt at executing
-    Assertions.assertThrows(AlreadyExecuted::class.java) { program.runBlocking() }
+    Assertions.assertThrows(ProgramException.AlreadyExecuted::class.java) { program.runBlocking() }
   }
 
   @Test
@@ -71,6 +71,66 @@ class ProgramTests {
     val copy = program.copy()
     copy.runBlocking()
     copy.assertExecutionSuccessful()
+  }
+
+  @Test
+  @DisplayName("Has Information about Illegal Stack Access when it happens")
+  fun hasInformationAboutIllegalStackAccessWhenItHappens() {
+    val wrongProgram = Program(mapOf(
+        0 to Push(1000),
+        1 to Mult,
+        2 to Stop
+    ))
+
+    val results = wrongProgram.runBlocking()
+    wrongProgram.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
+
+    val error = results.first { it is ProgramOutput.Error } as ProgramOutput.Error
+    assertThat(error.cause).isInstanceOf(ProgramException.IllegalStackAccess::class.java)
+
+    val cause = error.cause as ProgramException.IllegalStackAccess
+    assertThat(cause.line).isEqualTo(1)
+    assertThat(cause.message).isEqualTo("Illegal Stack access at L1")
+  }
+
+  @Test
+  @DisplayName("Has Information about Illegal Instruction Access when it happens")
+  fun hasInformationAboutIllegalInstructionAccessWhenItHappens() {
+    val wrongProgram = Program(mapOf(
+        0 to Call(42),
+        1 to Stop
+    ))
+
+    val results = wrongProgram.runBlocking()
+    wrongProgram.assertExecutionFailedWith<ProgramException.IllegalInstructionAccess>()
+
+    val error = results.first { it is ProgramOutput.Error } as ProgramOutput.Error
+    assertThat(error.cause).isInstanceOf(ProgramException.IllegalInstructionAccess::class.java)
+
+    val cause = error.cause as ProgramException.IllegalInstructionAccess
+    assertThat(cause.line).isEqualTo(0)
+    assertThat(cause.message).isEqualTo("Illegal Instruction access at L0")
+  }
+
+  @Test
+  @DisplayName("Has Information about Missing Stop Instruction when it happens")
+  fun hasInformationAboutMissingStopInstructionWhenItHappens() {
+    val wrongProgram = Program(mapOf(
+        0 to Push(1000),
+        1 to Push(450),
+        2 to Mult
+        // "Stop" missing intentionally
+    ))
+
+    val results = wrongProgram.runBlocking()
+    wrongProgram.assertExecutionFailedWith<ProgramException.IllegalInstructionAccess>()
+
+    val error = results.first { it is ProgramOutput.Error } as ProgramOutput.Error
+    assertThat(error.cause).isInstanceOf(ProgramException.IllegalInstructionAccess::class.java)
+
+    val cause = error.cause as ProgramException.IllegalInstructionAccess
+    assertThat(cause.line).isEqualTo(3)
+    assertThat(cause.message).isEqualTo("Illegal Instruction access at L3")
   }
 }
 
@@ -94,7 +154,7 @@ class MultInstructionTests {
     program.assertExecutionSuccessful()
     assertThat(results)
         .containsOnly(
-            ProgramOutput.Started,
+            ProgramOutput.Started(2),
             ProgramOutput.Calc(instruction = Mult, result = 30),
             ProgramOutput.Completed)
   }
@@ -106,7 +166,7 @@ class MultInstructionTests {
 
     program.runBlocking()
 
-    program.assertExecutionFailedWith<EmptyStackException>()
+    program.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
   }
 
   @Test
@@ -116,7 +176,7 @@ class MultInstructionTests {
 
     program.runBlocking()
 
-    program.assertExecutionFailedWith<EmptyStackException>()
+    program.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
   }
 }
 
@@ -165,7 +225,7 @@ class ReturnInstructionTests {
     program.assertExecutionSuccessful()
     assertThat(results)
         .containsExactly(
-            ProgramOutput.Started,
+            ProgramOutput.Started(2),
             ProgramOutput.Void(Return),
             ProgramOutput.Completed)
   }
@@ -181,7 +241,7 @@ class ReturnInstructionTests {
 
     program.runBlocking()
 
-    program.assertExecutionFailedWith<EmptyStackException>()
+    program.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
   }
 }
 
@@ -197,7 +257,7 @@ class StopInstructionTests {
     val results = program.runBlocking()
 
     program.assertExecutionSuccessful()
-    assertThat(results).containsOnly(ProgramOutput.Started, ProgramOutput.Completed)
+    assertThat(results).containsOnly(ProgramOutput.Started(1), ProgramOutput.Completed)
   }
 }
 
@@ -231,7 +291,7 @@ class PrintInstructionTests {
 
     program.runBlocking()
 
-    program.assertExecutionFailedWith<EmptyStackException>()
+    program.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
   }
 }
 

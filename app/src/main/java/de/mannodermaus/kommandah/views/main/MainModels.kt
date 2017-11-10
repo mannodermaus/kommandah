@@ -6,6 +6,7 @@ import de.mannodermaus.kommandah.models.Instruction
  * Representation of a single "list change" event in a Program, exposed to the View layer.
  * It holds some information about the diff compared to the last event.
  */
+@Deprecated(message = "ViewModel is already in charge of the different events; move to UI-bound model class")
 sealed class InstructionListEvent(val instructions: List<Instruction>) {
   class New(instructions: List<Instruction>) : InstructionListEvent(instructions)
   class Swap(val fromPosition: Int, val toPosition: Int, instructions: List<Instruction>) : InstructionListEvent(instructions)

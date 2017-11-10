@@ -2,6 +2,7 @@ package de.mannodermaus.kommandah.models
 
 import android.support.annotation.CheckResult
 import java.util.*
+import kotlin.NoSuchElementException
 
 /**
  * Representation of a Program to be executed by an Interpreter.
@@ -61,7 +62,7 @@ data class Program(
   fun run(): Sequence<ProgramOutput> {
     if (exitCode != ExitCode.None) {
       // Already executed; requires a copy() to run again
-      throw AlreadyExecuted()
+      throw ProgramException.AlreadyExecuted()
     }
 
     return sequenceOf(ProgramOutput.Started(instructions.size)) + generateSequence {
@@ -70,19 +71,29 @@ data class Program(
         null
 
       } else {
-        val line = lines[pc] ?: throw SegmentationFault(pc)
-        if (line.instruction is Instruction.Stop) {
-          // Toggle successful execution
-          _exitCode = ExitCode.Success
-        }
-        pc++
+        val line = lines[pc]
+        val output = if (line != null) {
+          pc++
+          line.execute()
 
-        val result = line.execute()
-        if (result is ProgramOutput.Error) {
-          // Toggle erroneous execution
-          _exitCode = ExitCode.Error(result.cause)
+        } else {
+          // At this point, this will only ever be absent
+          // if the user forgot to put the "Stop" instruction at the end.
+          // Map this case to an Illegal Instruction Access
+          // (TODO: Make this its own type?)
+          ProgramOutput.Error(ProgramException.IllegalInstructionAccess(pc))
         }
-        result
+
+        // Determine exit conditions
+        if (line?.instruction is Instruction.Stop) {
+          _exitCode = ExitCode.Success
+
+        } else if (output is ProgramOutput.Error) {
+          _exitCode = ExitCode.Error(output.cause)
+        }
+
+        // Sequence return value
+        output
       }
     }
   }
@@ -111,13 +122,19 @@ data class Program(
             return ProgramOutput.Calc(instruction, result)
           }
 
-          is Instruction.Call ->
+          is Instruction.Call -> {
             // "Jump to the instruction at the given value"
-            pc = instruction.address
+            val newPc = instruction.address
+            lines.getValue(newPc) // Will throw on illegal access
+            pc = newPc
+          }
 
-          is Instruction.Return ->
+          is Instruction.Return -> {
             // "Pop one argument from the stack, jump to the instruction at that address"
-            pc = stack.pop()
+            val newPc = stack.pop()
+            lines.getValue(newPc) // Will throw on illegal access
+            pc = newPc
+          }
 
           is Instruction.Stop ->
             // "Stop the execution"
@@ -138,8 +155,13 @@ data class Program(
         return ProgramOutput.Void(instruction)
 
       } catch (cause: Throwable) {
-        // Assume construction error by the user
-        return ProgramOutput.Error(cause, instruction)
+        // Assume construction error by the user, map to ProgramException
+        val wrapped = when (cause) {
+          is EmptyStackException -> ProgramException.IllegalStackAccess(line = index)
+          is NoSuchElementException -> ProgramException.IllegalInstructionAccess(line = index)
+          else -> ProgramException.Unknown(cause)
+        }
+        return ProgramOutput.Error(wrapped, instruction)
       }
     }
   }

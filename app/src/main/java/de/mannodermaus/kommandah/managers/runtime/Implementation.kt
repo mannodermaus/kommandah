@@ -3,8 +3,8 @@ package de.mannodermaus.kommandah.managers.runtime
 import dagger.Module
 import dagger.Provides
 import de.mannodermaus.kommandah.models.ExecutionEnvironment
-import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.models.Program
+import de.mannodermaus.kommandah.models.ProgramOutput
 import io.reactivex.Flowable
 import io.reactivex.rxkotlin.toFlowable
 import io.reactivex.rxkotlin.zipWith
@@ -27,5 +27,4 @@ private class NaiveInterpreter : Interpreter {
           // whose items aren't actually used
           .zipWith(Flowable.interval(
               env.speed.toMillis(), TimeUnit.MILLISECONDS), { e, _ -> e })
-          .onErrorReturn { ProgramOutput.Error(it) }
 }

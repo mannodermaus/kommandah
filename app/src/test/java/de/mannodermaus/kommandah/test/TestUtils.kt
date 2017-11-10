@@ -2,6 +2,7 @@ package de.mannodermaus.kommandah.test
 
 import de.mannodermaus.kommandah.models.ExitCode
 import de.mannodermaus.kommandah.models.Program
+import de.mannodermaus.kommandah.models.ProgramException
 import org.assertj.core.api.Assertions
 import java.util.*
 
@@ -13,11 +14,13 @@ fun <E> stackOf(vararg args: E) = Stack<E>().apply {
 
 /* Extensions */
 
-inline fun <reified T : Exception> Program.assertExecutionFailedWith() {
-  Assertions.assertThat(this.exitCode)
+inline fun <reified T : ProgramException> Program.assertExecutionFailedWith() {
+  Assertions.assertThat(exitCode)
       .isInstanceOf(ExitCode.Error::class.java)
-      .extracting("cause")
-      .hasOnlyOneElementSatisfying { it is T }
+
+  val error = exitCode as ExitCode.Error
+  Assertions.assertThat(error.cause)
+      .isInstanceOf(T::class.java)
 }
 
 fun Program.assertExecutionSuccessful() {
