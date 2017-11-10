@@ -73,6 +73,12 @@ class MainViewModel
 
   /* Interactions */
 
+  fun addInstruction(instruction: Instruction) {
+    val items = instructionData.value.toMutableList()
+    items += instruction
+    instructionData.onNext(items)
+  }
+
   fun swapInstructions(fromPosition: Int, toPosition: Int) {
     // Swap the two items in question, then also swap their indices
     val items = instructionData.value.toMutableList()

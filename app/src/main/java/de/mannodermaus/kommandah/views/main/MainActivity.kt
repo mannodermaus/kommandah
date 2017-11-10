@@ -133,7 +133,11 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupAddButton() {
     // Click Listener
-    disposables += buttonAdd.clicks().subscribe {  }
+    disposables += buttonAdd.clicks().subscribe {
+      showInstructionChooserDialog(this) {
+        viewModel.addInstruction(it)
+      }
+    }
   }
 
   private fun setupExpandButton() {
