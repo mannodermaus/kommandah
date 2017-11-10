@@ -8,8 +8,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
-import android.text.Editable
-import android.widget.ScrollView
+import android.view.View
 import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -17,8 +16,6 @@ import dagger.android.support.HasSupportFragmentInjector
 import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.di.HasViewModelProviderFactory
 import de.mannodermaus.kommandah.utils.ListItemDragListener
-import de.mannodermaus.kommandah.utils.SimpleTextWatcher
-import de.mannodermaus.kommandah.utils.extensions.appendLine
 import de.mannodermaus.kommandah.utils.extensions.toolbar
 import de.mannodermaus.kommandah.utils.extensions.viewModel
 import io.reactivex.disposables.CompositeDisposable
@@ -36,13 +33,21 @@ class MainActivity : AppCompatActivity(),
     HasViewModelProviderFactory,
     ListItemDragListener {
 
+  /* Injected Dependencies & Architecture  */
+
   @Inject lateinit var injector: DispatchingAndroidInjector<Fragment>
   @Inject override lateinit var modelFactory: ViewModelProvider.Factory
-
   private val viewModel by viewModel<MainActivity, MainViewModel>()
+
+  /* List of Instructions */
   private val listAdapter = InstructionAdapter(this)
   private lateinit var itemTouchHelper: ItemTouchHelper
 
+  /* Console Handling */
+  private val bottomToolbarBehavior by lazy { BottomSheetBehavior.from(toolbarBottom) }
+  private val console by lazy { Console(tvConsoleWindow) }
+
+  /* Other */
   private val disposables: CompositeDisposable = CompositeDisposable()
 
   override fun supportFragmentInjector(): AndroidInjector<Fragment> =
@@ -65,7 +70,6 @@ class MainActivity : AppCompatActivity(),
     applyMoveAwayBehavior(rvInstructions, toolbarBottom)
 
     // Drag-and-drop & Swipe-to-dismiss
-//    val itemTouchHelperCb = ItemTouchHelperDragCallback(listAdapter)
     itemTouchHelper = ItemTouchHelper(ListItemTouchCallback())
     itemTouchHelper.attachToRecyclerView(rvInstructions)
   }
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity(),
     // Connect to ViewModel
     setupListAdapter()
     setupExecutionButton()
+    setupExpandButton()
     setupConsoleWindow()
   }
 
@@ -117,49 +122,42 @@ class MainActivity : AppCompatActivity(),
           buttonExecute.isEnabled = false
 
           // Show the console window if it isn't showing already
-          val behavior = BottomSheetBehavior.from(toolbarBottom)
-          behavior.state = BottomSheetBehavior.STATE_EXPANDED
+          bottomToolbarBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         }
         else -> throw IllegalArgumentException("Unexpected ExecutionStatus '$status'")
       }
     }
   }
 
-  private fun setupConsoleWindow() {
-    // Automatically scroll to the bottom when new text arrives
-    tvConsoleWindow.addTextChangedListener(object : SimpleTextWatcher() {
-      override fun afterTextChanged(text: Editable) {
-        consoleWindow.fullScroll(ScrollView.FOCUS_DOWN)
-      }
-    })
-
-    // Connect to the ViewModel
-    disposables += viewModel.consoleMessages().subscribe {
-      when (it) {
-        is ConsoleEvent.Clear ->
-          tvConsoleWindow.text = ""
-
-        is ConsoleEvent.Started ->
-          tvConsoleWindow.appendLine(R.string.main_console_started, it.numLines)
-              .appendLine(R.string.main_console_separator)
-              .appendLine()
-
-        is ConsoleEvent.Message ->
-          tvConsoleWindow.appendLine(R.string.main_console_log, it.line, it.message)
-
-        is ConsoleEvent.Finished ->
-          tvConsoleWindow.appendLine()
-              .appendLine(R.string.main_console_separator)
-              .appendLine(R.string.main_console_finished)
-
-        is ConsoleEvent.Error ->
-          tvConsoleWindow
-              .appendLine()
-              .appendLine(R.string.main_console_separator)
-              .appendLine(R.string.main_console_error)
-              .appendLine(it.cause.message.toString())
+  private fun setupExpandButton() {
+    // Click listener
+    disposables += buttonExpand.clicks().subscribe {
+      // Toggle between collapsed and expanded
+      bottomToolbarBehavior.state = when (bottomToolbarBehavior.state) {
+        BottomSheetBehavior.STATE_COLLAPSED -> BottomSheetBehavior.STATE_EXPANDED
+        BottomSheetBehavior.STATE_EXPANDED -> BottomSheetBehavior.STATE_COLLAPSED
+        else -> bottomToolbarBehavior.state
       }
     }
+
+    // React to manual sliding
+    bottomToolbarBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+      override fun onSlide(bottomSheet: View, slideOffset: Float) {
+      }
+
+      override fun onStateChanged(bottomSheet: View, newState: Int) {
+        val newIcon = when (newState) {
+          BottomSheetBehavior.STATE_EXPANDED -> R.drawable.ic_chevron_down
+          else -> R.drawable.ic_chevron_up
+        }
+        buttonExpand.setImageResource(newIcon)
+      }
+    })
+  }
+
+  private fun setupConsoleWindow() {
+    // Connect to the ViewModel
+    disposables += viewModel.consoleMessages().subscribe { console.handle(it) }
   }
 
   /**

@@ -36,6 +36,7 @@
     <ImageButton
         android:id="@+id/buttonExpand"
         style="@style/Widget.Kommandah.Button.Borderless"
+        android:background="@null"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/ic_chevron_up"/>

@@ -2,11 +2,14 @@ package de.mannodermaus.kommandah.utils.extensions
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.support.annotation.AnimRes
 import android.support.annotation.ColorInt
 import android.support.annotation.ColorRes
 import android.support.annotation.DrawableRes
 import android.support.v4.content.res.ResourcesCompat
 import android.support.v4.graphics.drawable.DrawableCompat
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 
 /**
  * Obtain a Drawable in an API-level-safe manner, optionally tinting it with the provided color.
@@ -35,3 +38,6 @@ fun Drawable.tinted(@ColorInt color: Int): Drawable {
   DrawableCompat.setTint(wrapped, color)
   return wrapped
 }
+
+fun Context.loadAnimation(@AnimRes res: Int): Animation =
+    AnimationUtils.loadAnimation(this, res)
