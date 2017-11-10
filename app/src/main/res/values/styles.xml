@@ -38,7 +38,11 @@
   </style>
 
   <style name="Widget.Kommandah.Button" parent="Widget.AppCompat.Button"></style>
-  <style name="Widget.Kommandah.Button.Borderless" parent="Widget.AppCompat.Button.Borderless.Colored">
+  <style name="Widget.Kommandah.Button.Borderless" parent="Widget.AppCompat.Button.Borderless">
+  </style>
+  <style name="Widget.Kommandah.Button.Borderless.Colored"
+      parent="Widget.AppCompat.Button.Borderless.Colored">
+    <item name="android:background">@drawable/bg_borderless_colored</item>
   </style>
 
   <style name="Widget.Kommandah.ConsoleWindow">

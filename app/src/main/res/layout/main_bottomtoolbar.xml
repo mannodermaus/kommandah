@@ -28,10 +28,12 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/ic_play"/>
 
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"/>
+    <ImageButton
+        android:id="@+id/buttonAdd"
+        style="@style/Widget.Kommandah.Button.Borderless.Colored"
+        app:srcCompat="@drawable/ic_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
     <ImageButton
         android:id="@+id/buttonExpand"
