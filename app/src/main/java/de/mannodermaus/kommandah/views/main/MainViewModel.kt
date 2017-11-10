@@ -43,7 +43,7 @@ class MainViewModel
       BehaviorSubject.createDefault(ExecutionStatus.PAUSED)
 
   private val consoleMessages: BehaviorSubject<ConsoleEvent> =
-      BehaviorSubject.createDefault(ConsoleEvent.Clear)
+      BehaviorSubject.create()
 
   private val subscriptions: CompositeDisposable = CompositeDisposable()
 

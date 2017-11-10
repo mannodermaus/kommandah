@@ -1,9 +1,16 @@
 <resources>
   <string name="app_name">kommandah</string>
 
+  <string name="composite_bottom_sheet_behavior" translatable="false">de.mannodermaus.kommandah.utils.widgets.CompositeBottomSheetBehavior</string>
+  <string name="stick_to_bottom_sheet_behavior" translatable="false">de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior</string>
+
   <string name="main_console_separator" translatable="false">----------------</string>
   <string name="main_console_started">Running Program (%d instructions…)</string>
   <string name="main_console_finished">Finished Execution successfully.</string>
   <string name="main_console_log">&gt; PRINT (L%1$d): %2$s</string>
   <string name="main_console_error">ERROR during Execution:</string>
+  <string name="main_console_default">Run your Program to see some results here…</string>
+  <string name="main_cd_execute">Execute your Program</string>
+  <string name="main_cd_add">Add an Instruction</string>
+  <string name="main_cd_expand">Show/Hide the Console</string>
 </resources>

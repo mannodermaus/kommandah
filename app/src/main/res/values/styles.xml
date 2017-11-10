@@ -43,6 +43,8 @@
   <style name="Widget.Kommandah.Button.Borderless.Colored"
       parent="Widget.AppCompat.Button.Borderless.Colored">
     <item name="android:background">@drawable/bg_borderless_colored</item>
+    <item name="android:foreground">?android:attr/selectableItemBackground</item>
+    <item name="android:tint">@color/text_primary_contrast</item>
   </style>
 
   <style name="Widget.Kommandah.ConsoleWindow">

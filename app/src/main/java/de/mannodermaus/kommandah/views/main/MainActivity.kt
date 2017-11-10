@@ -18,6 +18,7 @@ import de.mannodermaus.kommandah.di.HasViewModelProviderFactory
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.extensions.toolbar
 import de.mannodermaus.kommandah.utils.extensions.viewModel
+import de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity(),
   private lateinit var itemTouchHelper: ItemTouchHelper
 
   /* Console Handling */
-  private val bottomToolbarBehavior by lazy { BottomSheetBehavior.from(toolbarBottom) }
+  private val bottomToolbarBehavior by lazy { StickToBottomSheetBehavior.from(toolbarBottom) }
   private val console by lazy { Console(tvConsoleWindow) }
 
   /* Other */
@@ -67,7 +68,7 @@ class MainActivity : AppCompatActivity(),
     // Setup RecyclerView
     rvInstructions.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
     rvInstructions.adapter = listAdapter
-    applyMoveAwayBehavior(rvInstructions, toolbarBottom)
+    bottomToolbarBehavior.attachToRecyclerView(toolbarBottom, rvInstructions)
 
     // Drag-and-drop & Swipe-to-dismiss
     itemTouchHelper = ItemTouchHelper(ListItemTouchCallback())
@@ -88,6 +89,7 @@ class MainActivity : AppCompatActivity(),
     // Connect to ViewModel
     setupListAdapter()
     setupExecutionButton()
+    setupAddButton()
     setupExpandButton()
     setupConsoleWindow()
   }
@@ -129,6 +131,11 @@ class MainActivity : AppCompatActivity(),
     }
   }
 
+  private fun setupAddButton() {
+    // Click Listener
+    disposables += buttonAdd.clicks().subscribe {  }
+  }
+
   private fun setupExpandButton() {
     // Click listener
     disposables += buttonExpand.clicks().subscribe {
@@ -141,7 +148,7 @@ class MainActivity : AppCompatActivity(),
     }
 
     // React to manual sliding
-    bottomToolbarBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+    bottomToolbarBehavior.addCallback(object : BottomSheetBehavior.BottomSheetCallback() {
       override fun onSlide(bottomSheet: View, slideOffset: Float) {
       }
 
