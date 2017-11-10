@@ -71,7 +71,7 @@ data class Program(
 
       } else {
         val line = lines[pc] ?: throw SegmentationFault(pc)
-        if (line.instruction is Stop) {
+        if (line.instruction is Instruction.Stop) {
           // Toggle successful execution
           _exitCode = ExitCode.Success
         }
@@ -102,7 +102,7 @@ data class Program(
     fun execute(): ProgramOutput {
       try {
         when (instruction) {
-          is Mult -> {
+          is Instruction.Mult -> {
             // "Pop two values from the stack, multiply them, push the result back"
             val value1 = stack.pop()
             val value2 = stack.pop()
@@ -111,25 +111,25 @@ data class Program(
             return ProgramOutput.Calc(instruction, result)
           }
 
-          is Call ->
+          is Instruction.Call ->
             // "Jump to the instruction at the given value"
             pc = instruction.address
 
-          is Return ->
+          is Instruction.Return ->
             // "Pop one argument from the stack, jump to the instruction at that address"
             pc = stack.pop()
 
-          is Stop ->
+          is Instruction.Stop ->
             // "Stop the execution"
             return ProgramOutput.Completed
 
-          is Print -> {
+          is Instruction.Print -> {
             // "Pop one argument from the stack, print it out"
             val argument = stack.pop()
             return ProgramOutput.Log(instruction, line = index, message = "$argument")
           }
 
-          is Push ->
+          is Instruction.Push ->
             // "Push the given argument to the stack"
             stack.push(instruction.argument)
         }

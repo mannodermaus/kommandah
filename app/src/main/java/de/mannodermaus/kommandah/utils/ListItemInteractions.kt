@@ -8,7 +8,7 @@ interface ListItemDragListener {
 }
 
 interface ItemTouchHelperAware {
-  fun onItemMove(fromPosition: Int, toPosition: Int): Boolean
+  fun onItemMove(fromPosition: Int, toPosition: Int)
   fun onItemDismiss(position: Int)
 }
 

@@ -4,12 +4,8 @@ import android.arch.lifecycle.ViewModel
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Instruction
-import de.mannodermaus.kommandah.models.Mult
-import de.mannodermaus.kommandah.models.Print
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
-import de.mannodermaus.kommandah.models.Push
-import de.mannodermaus.kommandah.models.Stop
 import de.mannodermaus.kommandah.utils.extensions.async
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
@@ -22,15 +18,15 @@ class MainViewModel
 @Inject constructor(private val interpreter: Interpreter) : ViewModel() {
 
   // TODO Implement properly
-  private val instructionData =
+  private val instructionData: BehaviorSubject<List<Instruction>> =
       BehaviorSubject.createDefault(mutableListOf(
-          Push(1337),
-          Print,
-          Push(1000),
-          Push(10),
-          Mult,
-          Print,
-          Stop
+          Instruction.Push(1337),
+          Instruction.Print,
+          Instruction.Push(1000),
+          Instruction.Push(10),
+          Instruction.Mult,
+          Instruction.Print,
+          Instruction.Stop
       ))
 
   private val executionStatus: BehaviorSubject<ExecutionStatus> =
@@ -53,7 +49,7 @@ class MainViewModel
   /**
    * Stream of events related to the Instructions that make up the current Program
    */
-  fun instructions(): Observable<List<Instruction>> = instructionData.map { Collections.unmodifiableList(it) }
+  fun instructions(): Observable<List<Instruction>> = instructionData
 
   /**
    * Stream of events related to the current execution status of the current Program

@@ -15,40 +15,41 @@ typealias Instructions = Map<Int, Instruction>
  */
 sealed class Instruction(protected val operator: String) {
   open fun describe(): String = operator
-}
+  override fun toString(): String = javaClass.simpleName
 
-/**
- * Pop two arguments from the stack, multiply them & push the result to the stack
- */
-object Mult : Instruction(operator = "MULT")
+  /**
+   * Pop two arguments from the stack, multiply them & push the result to the stack
+   */
+  object Mult : Instruction(operator = "MULT")
 
-/**
- * Jump to the instruction at index <i>address</i>
- */
-data class Call(val address: Int) : Instruction(operator = "CALL") {
-  override fun describe(): String = "${super.describe()} $address"
-}
+  /**
+   * Jump to the instruction at index <i>address</i>
+   */
+  data class Call(val address: Int) : Instruction(operator = "CALL") {
+    override fun describe(): String = "${super.describe()} $address"
+  }
 
-/**
- * Pop one argument from the stack, jump to the instruction at that index
- */
-object Return : Instruction(operator = "RET")
+  /**
+   * Pop one argument from the stack, jump to the instruction at that index
+   */
+  object Return : Instruction(operator = "RET")
 
-/**
- * Stop execution
- */
-object Stop : Instruction(operator = "STOP")
+  /**
+   * Stop execution
+   */
+  object Stop : Instruction(operator = "STOP")
 
-/**
- * Pop one argument from the stack, print it out
- */
-object Print : Instruction(operator = "PRINT")
+  /**
+   * Pop one argument from the stack, print it out
+   */
+  object Print : Instruction(operator = "PRINT")
 
-/**
- * Push the given argument to the stack
- */
-data class Push(val argument: Int) : Instruction(operator = "PUSH") {
-  override fun describe(): String = "${super.describe()} $argument"
+  /**
+   * Push the given argument to the stack
+   */
+  data class Push(val argument: Int) : Instruction(operator = "PUSH") {
+    override fun describe(): String = "${super.describe()} $argument"
+  }
 }
 
 /* Extensions */

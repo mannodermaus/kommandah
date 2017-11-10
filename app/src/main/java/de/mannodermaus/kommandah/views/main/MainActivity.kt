@@ -76,6 +76,8 @@ class MainActivity : AppCompatActivity(),
     itemTouchHelper.startDrag(holder)
   }
 
+  /* Lifecycle */
+
   override fun onStart() {
     super.onStart()
 
@@ -95,9 +97,8 @@ class MainActivity : AppCompatActivity(),
   /* Private */
 
   private fun setupListAdapter() {
-    disposables += viewModel.instructions().subscribe {
-      listAdapter.update(it)
-    }
+    // Keep list of instructions up-to-date
+    disposables += viewModel.instructions().subscribe { listAdapter.update(it) }
   }
 
   private fun setupExecutionButton() {

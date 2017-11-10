@@ -11,7 +11,6 @@ import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.utils.ItemTouchHelperAware
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import kotlinx.android.synthetic.main.list_item_instruction.view.*
-import timber.log.Timber
 import java.util.*
 
 private val itemLayoutResource = R.layout.list_item_instruction
@@ -25,7 +24,9 @@ class InstructionAdapter(private val dragListener: ListItemDragListener)
   : RecyclerView.Adapter<InstructionViewHolder>(),
     ItemTouchHelperAware {
 
-  private var items: MutableList<Instruction> = mutableListOf()
+  private var _items: List<Instruction> = emptyList()
+  val items: List<Instruction>
+    get() = Collections.unmodifiableList(_items)
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InstructionViewHolder {
     val inflater = LayoutInflater.from(parent.context)
@@ -43,30 +44,26 @@ class InstructionAdapter(private val dragListener: ListItemDragListener)
 
   /* Interactions */
 
-  override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-    Collections.swap(items, fromPosition, toPosition)
+  override fun onItemMove(fromPosition: Int, toPosition: Int) {
     notifyItemMoved(fromPosition, toPosition)
-    return true
   }
 
   override fun onItemDismiss(position: Int) {
-    items.removeAt(position)
     notifyItemRemoved(position)
   }
 
   fun update(newItems: List<Instruction>) {
     // Diff the current list against the new one & notify accordingly
     val oldItems = items
-    items = newItems.toMutableList()
+    _items = newItems
 
     val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
       override fun getOldListSize(): Int = oldItems.size
       override fun getNewListSize(): Int = newItems.size
       override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
           oldItems[oldItemPosition] == newItems[newItemPosition]
-
       override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-          oldItems[oldItemPosition] == newItems[newItemPosition]
+          oldItems[oldItemPosition] == newItems[newItemPosition] && oldItemPosition == newItemPosition
     }, true)
     diff.dispatchUpdatesTo(this)
   }
@@ -80,14 +77,12 @@ class InstructionViewHolder(view: View, dragListener: ListItemDragListener)
 
   init {
     // Allow drag-and-drop for cells
-    itemView.ivDragHandle.setOnTouchListener(object : View.OnTouchListener {
-      override fun onTouch(view: View, event: MotionEvent): Boolean {
-        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
-          dragListener.startDrag(this@InstructionViewHolder)
-        }
-        return false
+    itemView.ivDragHandle.setOnTouchListener { _, event ->
+      when (event.actionMasked) {
+        MotionEvent.ACTION_DOWN -> dragListener.startDrag(this@InstructionViewHolder)
       }
-    })
+      false
+    }
   }
 
   fun bind(item: Instruction) {
