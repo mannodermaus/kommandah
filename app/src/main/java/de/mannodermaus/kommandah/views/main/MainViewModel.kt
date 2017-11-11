@@ -7,42 +7,31 @@ import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
-import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
 import java.util.*
 import javax.inject.Inject
 
-private val WORKING_EXAMPLE_PROGRAM = listOf(
-    Instruction.Push(1337),
-    Instruction.Print,
-    Instruction.Push(1000),
-    Instruction.Push(10),
-    Instruction.Mult,
-    Instruction.Print,
-    Instruction.Stop
-)
-
-private val THROWS_EXCEPTION_AT_LINE_1 = listOf(
-    Instruction.Push(1337),
-    Instruction.Mult,
-    Instruction.Push(10),
-    Instruction.Print,
-    Instruction.Stop
-)
-
 class MainViewModel
 @Inject constructor(private val interpreter: Interpreter) : ViewModel() {
 
-  // TODO Implement properly
-  private val instructionData: BehaviorSubject<List<Instruction>> =
-      BehaviorSubject.createDefault(THROWS_EXCEPTION_AT_LINE_1)
+  /**
+   * Stream of events related to the Instructions that make up the current Program
+   */
+  val instructions: BehaviorSubject<List<Instruction>> =
+      BehaviorSubject.createDefault(emptyList())
 
-  private val executionStatus: BehaviorSubject<ExecutionStatus> =
+  /**
+   * Stream of events related to the current execution status of the current Program
+   */
+  val executionStatus: BehaviorSubject<ExecutionStatus> =
       BehaviorSubject.createDefault(ExecutionStatus.PAUSED)
 
-  private val consoleMessages: BehaviorSubject<ConsoleEvent> =
+  /**
+   * Stream of events related to handling console messages during execution
+   */
+  val consoleMessages: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
 
   private val subscriptions: CompositeDisposable = CompositeDisposable()
@@ -54,47 +43,30 @@ class MainViewModel
     subscriptions.clear()
   }
 
-  /* Streams */
-
-  /**
-   * Stream of events related to the Instructions that make up the current Program
-   */
-  fun instructions(): Observable<List<Instruction>> = instructionData
-
-  /**
-   * Stream of events related to the current execution status of the current Program
-   */
-  fun executionStatus(): Observable<ExecutionStatus> = executionStatus
-
-  /**
-   * Stream of events related to handling console messages during execution
-   */
-  fun consoleMessages(): Observable<ConsoleEvent> = consoleMessages
-
   /* Interactions */
 
   fun addInstruction(instruction: Instruction) {
-    val items = instructionData.value.toMutableList()
+    val items = instructions.value.toMutableList()
     items += instruction
-    instructionData.onNext(items)
+    instructions.onNext(items)
   }
 
   fun swapInstructions(fromPosition: Int, toPosition: Int) {
     // Swap the two items in question, then also swap their indices
-    val items = instructionData.value.toMutableList()
+    val items = instructions.value.toMutableList()
     Collections.swap(items, fromPosition, toPosition)
-    instructionData.onNext(items)
+    instructions.onNext(items)
   }
 
   fun removeInstruction(position: Int) {
-    val items = instructionData.value.toMutableList()
+    val items = instructions.value.toMutableList()
     items.removeAt(position)
-    instructionData.onNext(items)
+    instructions.onNext(items)
   }
 
   fun runProgram() {
     // Compile the instructions into a Program
-    val program = Program(instructionData.value
+    val program = Program(instructions.value
         .withIndex()
         .associate { it.index to it.value })
 

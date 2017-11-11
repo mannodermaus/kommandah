@@ -3,13 +3,13 @@
   <color name="primary">#607d8b</color>
   <color name="primary_light">#8eacbb</color>
   <color name="primary_dark">#34515e</color>
-  <color name="accent">#ffeb3b</color>
-  <color name="accent_light">#ffff72</color>
-  <color name="accent_dark">#c8b900</color>
+  <color name="accent">#8b7860</color>
+  <color name="accent_light">#b89e7f</color>
+  <color name="accent_dark">#82705a</color>
   <color name="text_primary">#000000</color>
   <color name="text_logo">#ffffff</color>
   <color name="text_primary_contrast">#ffffff</color>
-  <color name="text_console">@color/accent</color>
+  <color name="text_console">#d2b515</color>
 
   <color name="main_background">#e0e0e0</color>
   <color name="main_background_bottomtoolbar">@color/main_background</color>

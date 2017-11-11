@@ -57,6 +57,13 @@ sealed class ExitCode {
   data class Error(val cause: ProgramException) : ExitCode()
 }
 
+/**
+ * Configurable parameters for the execution of a Program using an Interpreter.
+ */
 data class ExecutionEnvironment(
+    /**
+     * The speed at which executions should be processed.
+     * TODO I'm envisioning a slider in the app UI that dynamically changes this property
+     */
     val speed: Duration = Duration.ofMillis(250)
 )

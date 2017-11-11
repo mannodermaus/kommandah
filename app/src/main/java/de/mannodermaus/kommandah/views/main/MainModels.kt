@@ -1,6 +1,7 @@
 package de.mannodermaus.kommandah.views.main
 
 import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.models.ProgramException
 
 /**
  * Representation of a single "list change" event in a Program, exposed to the View layer.
@@ -25,6 +26,6 @@ sealed class ConsoleEvent {
   object Clear : ConsoleEvent()
   data class Started(val numLines: Int) : ConsoleEvent()
   data class Message(val line: Int, val message: String) : ConsoleEvent()
-  data class Error(val cause: Throwable, val instruction: Instruction?) : ConsoleEvent()
+  data class Error(val cause: ProgramException, val instruction: Instruction?) : ConsoleEvent()
   object Finished : ConsoleEvent()
 }

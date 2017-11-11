@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupListAdapter() {
     // Keep list of instructions up-to-date
-    disposables += viewModel.instructions().subscribe { listAdapter.update(it) }
+    disposables += viewModel.instructions.subscribe { listAdapter.update(it) }
   }
 
   private fun setupExecutionButton() {
@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity(),
     disposables += buttonExecute.clicks().subscribe { viewModel.runProgram() }
 
     // Icon Change Events
-    disposables += viewModel.executionStatus().subscribe { status ->
+    disposables += viewModel.executionStatus.subscribe { status ->
       when (status) {
         ExecutionStatus.PAUSED -> {
           buttonExecute.setImageResource(R.drawable.ic_play)
@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupConsoleWindow() {
     // Connect to the ViewModel
-    disposables += viewModel.consoleMessages().subscribe { console.handle(it) }
+    disposables += viewModel.consoleMessages.subscribe { console.handle(it) }
   }
 
   /**

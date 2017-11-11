@@ -26,5 +26,5 @@ private class NaiveInterpreter : Interpreter {
           // by zipping with an infinite interval emitter
           // whose items aren't actually used
           .zipWith(Flowable.interval(
-              env.speed.toMillis(), TimeUnit.MILLISECONDS), { e, _ -> e })
+              0, env.speed.toMillis(), TimeUnit.MILLISECONDS), { e, _ -> e })
 }
