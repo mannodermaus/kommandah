@@ -7,6 +7,8 @@ import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
+import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
+import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject

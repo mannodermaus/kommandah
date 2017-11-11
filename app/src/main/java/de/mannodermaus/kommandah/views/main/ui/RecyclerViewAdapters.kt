@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.views.main
+package de.mannodermaus.kommandah.views.main.ui
 
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView

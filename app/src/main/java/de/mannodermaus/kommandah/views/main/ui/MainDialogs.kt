@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.views.main
+package de.mannodermaus.kommandah.views.main.ui
 
 import android.content.Context
 import android.support.design.widget.TextInputEditText

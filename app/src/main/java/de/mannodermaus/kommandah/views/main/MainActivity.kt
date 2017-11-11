@@ -21,6 +21,11 @@ import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.extensions.toolbar
 import de.mannodermaus.kommandah.utils.extensions.viewModel
 import de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior
+import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
+import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
+import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
+import de.mannodermaus.kommandah.views.main.ui.showInstructionChooserDialog
+import de.mannodermaus.kommandah.views.main.ui.showInstructionEditDialog
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
@@ -49,7 +54,7 @@ class MainActivity : AppCompatActivity(),
 
   /* Console Handling */
   private val bottomToolbarBehavior by lazy { StickToBottomSheetBehavior.from(toolbarBottom) }
-  private val console by lazy { Console(tvConsoleWindow) }
+  private val console by lazy { ConsoleWindow(tvConsoleWindow) }
 
   /* Other */
   private val disposables: CompositeDisposable = CompositeDisposable()

@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.views.main
+package de.mannodermaus.kommandah.views.main.models
 
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.ProgramException

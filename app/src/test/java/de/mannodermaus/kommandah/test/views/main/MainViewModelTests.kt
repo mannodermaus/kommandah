@@ -3,7 +3,7 @@ package de.mannodermaus.kommandah.test.views.main
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.test.managers.runtime.InstantInterpreter
-import de.mannodermaus.kommandah.views.main.ConsoleEvent
+import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.MainViewModel
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.observers.TestObserver

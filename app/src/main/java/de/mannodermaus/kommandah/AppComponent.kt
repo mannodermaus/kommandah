@@ -7,7 +7,7 @@ import de.mannodermaus.kommandah.managers.db.PersistenceModule
 import de.mannodermaus.kommandah.managers.runtime.RuntimeModule
 import de.mannodermaus.kommandah.managers.time.TimeModule
 import de.mannodermaus.kommandah.managers.viewmodel.ViewModelModule
-import de.mannodermaus.kommandah.views.main.MainActivityModule
+import de.mannodermaus.kommandah.views.main.di.MainActivityModule
 import javax.inject.Singleton
 
 @Singleton

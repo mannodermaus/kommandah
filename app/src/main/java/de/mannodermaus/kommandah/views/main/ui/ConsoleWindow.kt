@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.views.main
+package de.mannodermaus.kommandah.views.main.ui
 
 import android.text.Editable
 import android.widget.ScrollView
@@ -6,12 +6,13 @@ import android.widget.TextView
 import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.utils.SimpleTextWatcher
 import de.mannodermaus.kommandah.utils.extensions.appendLine
+import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 
 /**
  * Handler for incoming [ConsoleEvent],
  * pushed into a given [TextView].
  */
-class Console(val view: TextView) {
+class ConsoleWindow(val view: TextView) {
 
   init {
     // Validate the TextView that was passed in
