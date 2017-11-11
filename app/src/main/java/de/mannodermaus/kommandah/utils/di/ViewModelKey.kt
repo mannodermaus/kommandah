@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.di
+package de.mannodermaus.kommandah.utils.di
 
 import android.arch.lifecycle.ViewModel
 import dagger.MapKey

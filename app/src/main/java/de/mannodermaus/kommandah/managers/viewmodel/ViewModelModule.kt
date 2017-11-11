@@ -5,8 +5,8 @@ import android.arch.lifecycle.ViewModelProvider
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
-import de.mannodermaus.kommandah.di.KommandahViewModelFactory
-import de.mannodermaus.kommandah.di.ViewModelKey
+import de.mannodermaus.kommandah.utils.di.KommandahViewModelFactory
+import de.mannodermaus.kommandah.utils.di.ViewModelKey
 import de.mannodermaus.kommandah.views.main.MainViewModel
 
 @Module

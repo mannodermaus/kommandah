@@ -14,7 +14,7 @@ import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.HasSupportFragmentInjector
 import de.mannodermaus.kommandah.R
-import de.mannodermaus.kommandah.di.HasViewModelProviderFactory
+import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener

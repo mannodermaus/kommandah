@@ -4,7 +4,7 @@ import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.support.v4.app.FragmentActivity
-import de.mannodermaus.kommandah.di.HasViewModelProviderFactory
+import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
 
 /**
  * Shorthand Delegated Property to provide a ViewModel

@@ -5,7 +5,7 @@ import android.app.Application
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasActivityInjector
-import de.mannodermaus.kommandah.di.setupInjectors
+import de.mannodermaus.kommandah.utils.di.setupInjectors
 import de.mannodermaus.kommandah.managers.logging.LoggingInitializer
 import de.mannodermaus.kommandah.managers.time.TimeInitializer
 import javax.inject.Inject

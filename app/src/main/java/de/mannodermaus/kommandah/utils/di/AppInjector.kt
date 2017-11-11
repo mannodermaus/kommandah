@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.di
+package de.mannodermaus.kommandah.utils.di
 
 import android.app.Activity
 import android.os.Bundle
