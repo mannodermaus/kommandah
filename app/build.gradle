@@ -78,6 +78,7 @@ dependencies {
   implementation "com.jakewharton.rxbinding2:rxbinding-kotlin:$RXBINDING_VERSION"
   implementation "com.jakewharton.threetenabp:threetenabp:$THREETEN_ANDROID_VERSION"
   implementation "com.jakewharton.timber:timber:$TIMBER_VERSION"
+  implementation "io.michaelrocks:bimap:$BIMAP_VERSION"
 
   implementation "com.google.dagger:dagger-android:$DAGGER_VERSION"
   implementation "com.google.dagger:dagger-android-support:$DAGGER_VERSION"

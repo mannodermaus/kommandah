@@ -1,21 +1,17 @@
 package de.mannodermaus.kommandah.views.main
 
 import android.content.Context
-import android.graphics.Typeface
 import android.support.design.widget.TextInputEditText
+import android.support.design.widget.TextInputLayout
 import android.text.InputType
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.StyleSpan
 import android.widget.LinearLayout
 import com.afollestad.materialdialogs.MaterialDialog
 import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.models.InstructionMeta
+import de.mannodermaus.kommandah.models.InstructionParam
 import de.mannodermaus.kommandah.utils.extensions.addViews
 import de.mannodermaus.kommandah.utils.extensions.showDialog
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createType
-import kotlin.reflect.full.primaryConstructor
 
 // FIXME This entire file is using kotlin-reflect because of time constraints.
 // Usually we'd prefer a cleaner list of available Instructions
@@ -23,42 +19,42 @@ import kotlin.reflect.full.primaryConstructor
 
 /* Types */
 
-private class InstructionChoice(val cls: KClass<Instruction>) {
-  val parameters = cls.primaryConstructor?.parameters ?: emptyList()
-  val prettyName: CharSequence by lazy {
-    if (parameters.isEmpty()) {
-      cls.simpleName ?: ""
-
-    } else {
-      // Include parameters in the result
-      SpannableStringBuilder()
-          .append(cls.simpleName)
-          .append(parameters.map { it.name }.joinToString(
-              separator = ", ",
-              prefix = " (",
-              postfix = ")"),
-              StyleSpan(Typeface.ITALIC), Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-    }
-  }
-
-  fun newInstance(vararg args: Any?): Instruction {
-    return if (cls.objectInstance != null) {
-      // e.g. "Print"
-      cls.objectInstance as Instruction
-
-    } else {
-      // e.g. "Push X"
-      cls.primaryConstructor?.call(*args) as Instruction
-    }
-  }
-}
-
-/**
- * Mapping between Instruction classes & their choice-related value objects.
- * Evaluated once on demand, since its construction is pretty expensive.
- */
-private val INSTRUCTION_CHOICES_LIST = Instruction::class.nestedClasses
-    .map { InstructionChoice(it as KClass<Instruction>) }
+//private class InstructionChoice(val cls: KClass<Instruction>) {
+//  val parameters = cls.primaryConstructor?.parameters ?: emptyList()
+//  val prettyName: CharSequence by lazy {
+//    if (parameters.isEmpty()) {
+//      cls.simpleName ?: ""
+//
+//    } else {
+//      // Include parameters in the result
+//      SpannableStringBuilder()
+//          .append(cls.simpleName)
+//          .append(parameters.map { it.name }.joinToString(
+//              separator = ", ",
+//              prefix = " (",
+//              postfix = ")"),
+//              StyleSpan(Typeface.ITALIC), Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+//    }
+//  }
+//
+//  fun newInstance(vararg args: Any?): Instruction {
+//    return if (cls.objectInstance != null) {
+//      // e.g. "Print"
+//      cls.objectInstance as Instruction
+//
+//    } else {
+//      // e.g. "Push X"
+//      cls.primaryConstructor?.call(*args) as Instruction
+//    }
+//  }
+//}
+//
+///**
+// * Mapping between Instruction classes & their choice-related value objects.
+// * Evaluated once on demand, since its construction is pretty expensive.
+// */
+//private val INSTRUCTION_CHOICES_LIST = Instruction::class.nestedClasses
+//    .map { InstructionChoice(it as KClass<Instruction>) }
 
 /* Functions */
 
@@ -67,9 +63,11 @@ private val INSTRUCTION_CHOICES_LIST = Instruction::class.nestedClasses
  * The provided function is invoked upon selecting a choice.
  */
 fun showInstructionChooserDialog(context: Context, callback: (Instruction) -> Unit): MaterialDialog {
+  val allChoices = Instruction.allOperators()
+
   return context.showDialog {
     title(R.string.main_dialog_instructionchooser_title)
-    items(INSTRUCTION_CHOICES_LIST.map { it.prettyName })
+    items(allChoices)
     autoDismiss(true)
     canceledOnTouchOutside(true)
     itemsCallbackSingleChoice(-1) { _, _, which, _ ->
@@ -77,52 +75,51 @@ fun showInstructionChooserDialog(context: Context, callback: (Instruction) -> Un
       // that require parameters for construction,
       // and defer this work to a follow-up dialog.
       // Otherwise, the callback is invoked immediately
-      val selected = INSTRUCTION_CHOICES_LIST[which]
-      if (selected.parameters.isNotEmpty()) {
-        showParameterizedInstructionFollowupDialog(context, selected, callback = callback)
+      val metadata = Instruction.metadataFromOperator(allChoices[which])
+      if (metadata.hasParameters) {
+        showParameterizedInstructionFollowupDialog(context, metadata, callback = callback)
         false
 
       } else {
-        callback.invoke(selected.newInstance())
+        callback.invoke(metadata.createInstruction())
         true
       }
     }
   }
 }
 
-fun showInstructionEditDialog(context: Context,
-                              instruction: Instruction,
-                              callback: (Instruction) -> Unit): MaterialDialog {
-  val choice = INSTRUCTION_CHOICES_LIST.first { it.cls == instruction.javaClass }
-  return showParameterizedInstructionFollowupDialog(context, choice, instruction, callback)
-}
+fun showInstructionEditDialog(context: Context, instruction: Instruction, callback: (Instruction) -> Unit): MaterialDialog =
+    showParameterizedInstructionFollowupDialog(context, instruction.metadata(), instruction, callback)
 
 /* Private */
 
 private fun showParameterizedInstructionFollowupDialog(context: Context,
-                                                       choice: InstructionChoice,
+                                                       metadata: InstructionMeta,
                                                        initial: Instruction? = null,
                                                        callback: (Instruction) -> Unit): MaterialDialog {
   // For each parameter that the Instruction requires upon creation,
   // insert an EditText into the dialog and require it to be non-empty upon confirmation
-  val editTexts = choice.parameters.map { parameter ->
-    TextInputEditText(context).apply {
-      // Derive the initial text value for the field from the object itself
-      initial?.let {
-        val memberField = initial.javaClass.getDeclaredField(parameter.name)
-        val memberValue = memberField[initial].toString()
-        text = SpannableStringBuilder(memberValue)
-      }
+  val editTexts = metadata.parameters.map { parameter ->
+    TextInputLayout(context).apply {
+      addView(TextInputEditText(context).apply {
+        // Derive the pre-populated text of the field
+        val initialText = when (initial) {
+          is Instruction.Push -> initial.argument.toString()
+          is Instruction.Call -> initial.address.toString()
+          else -> null
+        }
+        initialText?.let { setText(initialText) }
 
-      // Derive the input type from the parameter type
-      inputType = when (parameter.type) {
-        Int::class.createType() -> InputType.TYPE_CLASS_NUMBER
-        else -> InputType.TYPE_CLASS_TEXT
-      }
+        // Derive the input type from the parameter type
+        inputType = when (parameter) {
+          is InstructionParam.Int -> InputType.TYPE_CLASS_NUMBER
+          else -> InputType.TYPE_CLASS_TEXT
+        }
 
-      // More trivial parameters
-      hint = parameter.name
-      setSingleLine(true)
+        // More trivial parameters
+        hint = parameter.name
+        setSingleLine(true)
+      })
     }
   }
   val wrapper = LinearLayout(context).apply {
@@ -131,7 +128,7 @@ private fun showParameterizedInstructionFollowupDialog(context: Context,
   }
 
   return context.showDialog {
-    title(choice.prettyName)
+    title(metadata.operator)
     customView(wrapper, true)
     positiveText(R.string.main_dialog_ok)
     negativeText(R.string.main_dialog_cancel)
@@ -141,17 +138,17 @@ private fun showParameterizedInstructionFollowupDialog(context: Context,
     onPositive { dialog, _ ->
       // Validate & aggregate all input field's values
       // & create the Instruction from them after that.
-      val missingField = editTexts.firstOrNull { it.text.isEmpty() }
+      val missingField = editTexts.firstOrNull { it.editText!!.text.isEmpty() }
       if (missingField != null) {
         missingField.error = context.getString(R.string.main_dialog_inputrequired)
 
       } else {
         // Try converting arguments to integers or use the Strings as-is
         val inputValues = editTexts
-            .map { it.text.toString() }
+            .map { it.editText!!.text.toString() }
             .map { it.toIntOrNull() ?: it }
             .toTypedArray()
-        val instruction = choice.newInstance(*inputValues)
+        val instruction = metadata.createInstruction(*inputValues)
         callback.invoke(instruction)
         dialog.dismiss()
       }

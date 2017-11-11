@@ -81,8 +81,10 @@ class MainActivity : AppCompatActivity(),
   /* List Item Interactions */
 
   override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: Instruction) {
-    showInstructionEditDialog(this, item) { newItem ->
-      viewModel.replaceInstruction(holder.adapterPosition, newItem)
+    if (item.metadata().hasParameters) {
+      showInstructionEditDialog(this, item) { newItem ->
+        viewModel.replaceInstruction(holder.adapterPosition, newItem)
+      }
     }
   }
 
