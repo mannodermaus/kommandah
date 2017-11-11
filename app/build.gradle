@@ -89,6 +89,7 @@ dependencies {
   testImplementation "org.threeten:threetenbp:$THREETEN_JAVA_VERSION"
   testImplementation "org.assertj:assertj-core:$ASSERTJ_VERSION"
   testImplementation "android.arch.core:core-testing:$ARCHITECTURE_COMPONENTS_VERSION"
+  testImplementation "org.mockito:mockito-core:$MOCKITO_VERSION"
 
   androidTestImplementation "com.android.support.test:runner:$SUPPORT_TEST_VERSION"
   androidTestImplementation "com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"
