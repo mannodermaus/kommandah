@@ -12,4 +12,6 @@
   <!-- expanded_height - collapsed_height; how I wished there was support for arithmetic in resources… -->
   <dimen name="main_bottomtoolbar_diff_height">240dp</dimen>
   <dimen name="main_consolewindow_padding">4dp</dimen>
+  <dimen name="main_instruction_status_width">8dp</dimen>
+  <dimen name="main_instruction_status_corner">4dp</dimen>
 </resources>

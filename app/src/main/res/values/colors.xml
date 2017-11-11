@@ -14,4 +14,8 @@
   <color name="main_background">#e0e0e0</color>
   <color name="main_background_bottomtoolbar">@color/main_background</color>
   <color name="main_background_console">#080808</color>
+  <color name="main_instruction_none">#d0d0d0</color>
+  <color name="main_instruction_stop">#101010</color>
+  <color name="main_instruction_success">#366936</color>
+  <color name="main_instruction_error">#731b0f</color>
 </resources>

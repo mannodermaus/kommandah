@@ -66,3 +66,9 @@ fun TextView.appendLine(@StringRes res: Int, vararg args: Any) = this.also {
 fun ViewGroup.addViews(views: Iterable<View>) {
   views.forEach { addView(it) }
 }
+
+/* View */
+
+fun View.setVisibleIf(condition: Boolean) {
+  this.visibility = if (condition) View.VISIBLE else View.GONE
+}

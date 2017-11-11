@@ -79,7 +79,7 @@ data class Program(
           // At this point, this will only ever be absent
           // if the user forgot to put the "Stop" instruction at the end.
           // Map this case to a specialized Illegal Instruction Access
-          ProgramOutput.Error(ProgramException.MissingStopInstruction(pc))
+          ProgramOutput.Error(ProgramException.MissingStopInstruction(pc), pc)
         }
 
         // Determine exit conditions
@@ -115,9 +115,8 @@ data class Program(
             // "Pop two values from the stack, multiply them, push the result back"
             val value1 = stack.pop()
             val value2 = stack.pop()
-            val result = value1 * value2
-            stack.push(result)
-            return ProgramOutput.Calc(instruction, result)
+            stack.push(value1 * value2)
+            return ProgramOutput.Step(instruction, index)
           }
 
           is Instruction.Call -> {
@@ -141,7 +140,7 @@ data class Program(
           is Instruction.Print -> {
             // "Pop one argument from the stack, print it out"
             val argument = stack.pop()
-            return ProgramOutput.Log(instruction, line = index, message = "$argument")
+            return ProgramOutput.Step(instruction, line = index, message = "$argument")
           }
 
           is Instruction.Push ->
@@ -150,7 +149,7 @@ data class Program(
         }
 
         // Default result value
-        return ProgramOutput.Void(instruction)
+        return ProgramOutput.Step(instruction, index)
 
       } catch (cause: Throwable) {
         // Assume construction error by the user, map to ProgramException
@@ -162,7 +161,7 @@ data class Program(
           else ->
             ProgramException.Unknown(cause)
         }
-        return ProgramOutput.Error(wrapped, instruction)
+        return ProgramOutput.Error(wrapped, index, instruction)
       }
     }
   }

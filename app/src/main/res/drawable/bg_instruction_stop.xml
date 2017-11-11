@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+  <corners android:topLeftRadius="@dimen/main_instruction_status_corner"
+      android:topRightRadius="@dimen/main_instruction_status_corner"/>
+  <solid android:color="@color/main_instruction_stop"/>
+</shape>

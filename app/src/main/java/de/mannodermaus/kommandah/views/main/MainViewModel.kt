@@ -9,6 +9,7 @@ import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
+import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
@@ -21,7 +22,7 @@ class MainViewModel
   /**
    * Stream of events related to the Instructions that make up the current Program
    */
-  val instructions: BehaviorSubject<List<Instruction>> =
+  val instructions: BehaviorSubject<List<InstructionItem>> =
       BehaviorSubject.createDefault(emptyList())
 
   /**
@@ -47,51 +48,33 @@ class MainViewModel
 
   /* Interactions */
 
-  fun addInstruction(instruction: Instruction) {
-    val items = instructions.value.toMutableList()
-    items += instruction
-    instructions.onNext(items)
-  }
-
-  fun swapInstructions(fromPosition: Int, toPosition: Int) {
-    // Swap the two items in question, then also swap their indices
-    val items = instructions.value.toMutableList()
-    Collections.swap(items, fromPosition, toPosition)
-    instructions.onNext(items)
-  }
-
-  fun removeInstruction(position: Int) {
-    val items = instructions.value.toMutableList()
-    items.removeAt(position)
-    instructions.onNext(items)
-  }
-
-  fun replaceInstruction(position: Int, instruction: Instruction) {
-    val items = instructions.value.toMutableList()
-    items[position] = instruction
-    instructions.onNext(items)
-  }
-
   fun runProgram() {
     // Compile the instructions into a Program
     val program = Program(instructions.value
         .withIndex()
-        .associate { it.index to it.value })
+        .associate { it.index to it.value.instruction })
 
     // Interpret the program, passing through events as side-effects
     subscriptions += interpreter.execute(program, ExecutionEnvironment())
         .async()
         .doOnSubscribe {
           // Update the execution status
+          clearInstructionState()
           executionStatus.onNext(ExecutionStatus.RUNNING)
           consoleMessages.onNext(ConsoleEvent.Clear)
         }
         .doOnNext {
-          // Propagate log messages through the Console stream,
-          // converting each into the View Realm's data types
+          // Handle intermediate item updates
+          when (it) {
+            is ProgramOutput.Step -> updateInstructionStatus(it.line, InstructionItem.State.SUCCESS)
+            is ProgramOutput.Error -> updateInstructionStatus(it.line, InstructionItem.State.ERROR)
+          }
+        }
+        .doOnNext {
+          // Handle Console Output
           when (it) {
             is ProgramOutput.Started -> consoleMessages.onNext(ConsoleEvent.Started(it.numLines))
-            is ProgramOutput.Log -> consoleMessages.onNext(ConsoleEvent.Message(it.line, it.message))
+            is ProgramOutput.Step -> it.message?.let { msg -> consoleMessages.onNext(ConsoleEvent.Message(it.line, msg)) }
             is ProgramOutput.Error -> consoleMessages.onNext(ConsoleEvent.Error(it.cause, it.instruction))
             is ProgramOutput.Completed -> consoleMessages.onNext(ConsoleEvent.Finished)
           }
@@ -101,5 +84,75 @@ class MainViewModel
           executionStatus.onNext(ExecutionStatus.PAUSED)
         }
         .subscribe()
+  }
+
+  /**
+   * Appends the given instruction to the end of the item list,
+   * then fires a notification to subscribers of the data.
+   */
+  fun addInstruction(instruction: Instruction) {
+    updateItemsInternal { it += InstructionItem(instruction) }
+  }
+
+  /**
+   * Swaps the instructions at the given positions with each other,
+   * then fires a notification to subscribers of the data.
+   */
+  fun swapInstructions(fromPosition: Int, toPosition: Int) {
+    updateItemsInternal { Collections.swap(it, fromPosition, toPosition) }
+  }
+
+  /**
+   * Removes the instruction at the given position,
+   * then fires a notification to subscribers of the data.
+   */
+  fun removeInstruction(position: Int) {
+    updateItemsInternal { it.removeAt(position) }
+  }
+
+  /**
+   * Replaces the instruction at the given position with the new one,
+   * then fires a notification to subscribers of the data.
+   */
+  fun replaceInstruction(position: Int, instruction: Instruction) {
+    updateItemsInternal { it[position] = it[position].copy(instruction = instruction) }
+  }
+
+  /* Private */
+
+  /**
+   * Reset all items' "State" to NONE.
+   * This is invoked upon executing a Program to clear all UI hints
+   * related to success or error for each instruction.
+   */
+  private fun clearInstructionState() {
+    updateItemsInternal {
+      it.forEachIndexed { position, item ->
+        it[position] = item.copy(state = InstructionItem.State.NONE)
+      }
+    }
+  }
+
+  /**
+   * Update the "State" of the provided instruction to the given value.
+   * This is a side-effect while executing a Program,
+   * providing a UI hint about the success of each line.
+   */
+  private fun updateInstructionStatus(position: Int, state: InstructionItem.State) {
+    updateItemsInternal {
+      it[position] = it[position].copy(state = state)
+    }
+  }
+
+  /**
+   * Updates the list of Instructions held by the ViewModel
+   * by means of the function passed in. Because this pattern
+   * of mutating the item list is so common in the public API
+   * of this ViewModel, it has been extracted to its own inline method.
+   */
+  private inline fun updateItemsInternal(function: (MutableList<InstructionItem>) -> Unit) {
+    val items = instructions.value.toMutableList()
+    function.invoke(items)
+    instructions.onNext(items)
   }
 }

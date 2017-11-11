@@ -14,16 +14,17 @@ import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.HasSupportFragmentInjector
 import de.mannodermaus.kommandah.R
-import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
-import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
+import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
+import de.mannodermaus.kommandah.utils.extensions.setVisibleIf
 import de.mannodermaus.kommandah.utils.extensions.toolbar
 import de.mannodermaus.kommandah.utils.extensions.viewModel
 import de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior
 import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
-import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
+import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
+import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
 import de.mannodermaus.kommandah.views.main.ui.showInstructionChooserDialog
 import de.mannodermaus.kommandah.views.main.ui.showInstructionEditDialog
 import io.reactivex.disposables.CompositeDisposable
@@ -39,7 +40,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(),
     HasSupportFragmentInjector,
     HasViewModelProviderFactory,
-    ListItemClickListener<Instruction>,
+    ListItemClickListener<InstructionItem>,
     ListItemDragListener {
 
   /* Injected Dependencies & Architecture  */
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity(),
     // Setup RecyclerView
     rvInstructions.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
     rvInstructions.adapter = listAdapter
+    rvInstructions.itemAnimator = null
     bottomToolbarBehavior.attachToRecyclerView(toolbarBottom, rvInstructions)
 
     // Drag-and-drop & Swipe-to-dismiss
@@ -85,9 +87,10 @@ class MainActivity : AppCompatActivity(),
 
   /* List Item Interactions */
 
-  override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: Instruction) {
-    if (item.metadata().hasParameters) {
-      showInstructionEditDialog(this, item) { newItem ->
+  override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: InstructionItem) {
+    val instruction = item.instruction
+    if (instruction.metadata().hasParameters) {
+      showInstructionEditDialog(this, instruction) { newItem ->
         viewModel.replaceInstruction(holder.adapterPosition, newItem)
       }
     }
@@ -186,6 +189,9 @@ class MainActivity : AppCompatActivity(),
   private fun setupConsoleWindow() {
     // Connect to the ViewModel
     disposables += viewModel.consoleMessages.subscribe { console.handle(it) }
+    disposables += viewModel.executionStatus
+        .map { it == ExecutionStatus.RUNNING }
+        .subscribe { isRunning -> progressBar.setVisibleIf(isRunning) }
   }
 
   /**

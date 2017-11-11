@@ -4,14 +4,17 @@ import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.ProgramException
 
 /**
- * Representation of a single "list change" event in a Program, exposed to the View layer.
- * It holds some information about the diff compared to the last event.
+ * UI-facing wrapper model for an item represented in the Activity's list of Instructions.
+ * This contains some UI-relevant info about how to render the particular cell as well.
  */
-@Deprecated(message = "ViewModel is already in charge of the different events; move to UI-bound model class")
-sealed class InstructionListEvent(val instructions: List<Instruction>) {
-  class New(instructions: List<Instruction>) : InstructionListEvent(instructions)
-  class Swap(val fromPosition: Int, val toPosition: Int, instructions: List<Instruction>) : InstructionListEvent(instructions)
-  class Remove(val position: Int, instructions: List<Instruction>) : InstructionListEvent(instructions)
+data class InstructionItem(val instruction: Instruction, val state: State = State.NONE) {
+  /**
+   * The Instruction was either:
+   * - not executed at all (NONE)
+   * - executed successfully (SUCCESS)
+   * - executed & raised an error (ERROR)
+   */
+  enum class State { NONE, SUCCESS, ERROR }
 }
 
 /**

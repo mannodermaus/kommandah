@@ -153,7 +153,7 @@ class MultInstructionTests {
     assertThat(results)
         .containsOnly(
             ProgramOutput.Started(2),
-            ProgramOutput.Calc(instruction = Mult, result = 30),
+            ProgramOutput.Step(instruction = Mult, line = 0),
             ProgramOutput.Completed)
   }
 
@@ -196,7 +196,7 @@ class CallInstructionTests {
 
     program.assertExecutionSuccessful()
     assertThat(results
-        .filter { it is ProgramOutput.Void })
+        .filter { it is ProgramOutput.Step })
         .extracting("instruction")
         .extracting("address")
         .containsExactly(5, 3, 20)
@@ -224,7 +224,7 @@ class ReturnInstructionTests {
     assertThat(results)
         .containsExactly(
             ProgramOutput.Started(2),
-            ProgramOutput.Void(Return),
+            ProgramOutput.Step(Return, line = 0),
             ProgramOutput.Completed)
   }
 
@@ -275,7 +275,7 @@ class PrintInstructionTests {
     program.assertExecutionSuccessful()
     assertThat(results).hasSize(3)
         .element(1)
-        .isInstanceOf(ProgramOutput.Log::class.java)
+        .isInstanceOf(ProgramOutput.Step::class.java)
         .extracting("message")
         .hasOnlyOneElementSatisfying { it == "1337" }
   }

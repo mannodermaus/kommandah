@@ -3,8 +3,9 @@ package de.mannodermaus.kommandah.test.views.main
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.test.managers.runtime.InstantInterpreter
-import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.MainViewModel
+import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
+import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.observers.TestObserver
 import io.reactivex.schedulers.Schedulers
@@ -37,13 +38,13 @@ class MainViewModelTests {
   @Test
   @DisplayName("Add Instruction: Works as expected")
   fun addInstructionWorksAsExpected() {
-    val observer = TestObserver<List<Instruction>>()
+    val observer = TestObserver<List<InstructionItem>>()
 
     viewModel.instructions.subscribe(observer)
     observer.assertValueAt(0, emptyList())
 
     viewModel.addInstruction(Instruction.Stop)
-    observer.assertValueAt(1, listOf(Instruction.Stop))
+    observer.assertValueAt(1, listOf(InstructionItem(Instruction.Stop)))
   }
 
   @Test
@@ -53,13 +54,19 @@ class MainViewModelTests {
     viewModel.addInstruction(Instruction.Print)
     viewModel.addInstruction(Instruction.Push(1000))
 
-    val observer = TestObserver<List<Instruction>>()
+    val observer = TestObserver<List<InstructionItem>>()
     viewModel.instructions.subscribe(observer)
 
-    observer.assertValueAt(0, listOf(Instruction.Stop, Instruction.Print, Instruction.Push(1000)))
+    observer.assertValueAt(0, listOf(
+        InstructionItem(Instruction.Stop),
+        InstructionItem(Instruction.Print),
+        InstructionItem(Instruction.Push(1000))))
 
     viewModel.swapInstructions(2, 0)
-    observer.assertValueAt(1, listOf(Instruction.Push(1000), Instruction.Print, Instruction.Stop))
+    observer.assertValueAt(1, listOf(
+        InstructionItem(Instruction.Push(1000)),
+        InstructionItem(Instruction.Print),
+        InstructionItem(Instruction.Stop)))
   }
 
   @Test
@@ -70,13 +77,20 @@ class MainViewModelTests {
     viewModel.addInstruction(Instruction.Mult)
     viewModel.addInstruction(Instruction.Stop)
 
-    val observer = TestObserver<List<Instruction>>()
+    val observer = TestObserver<List<InstructionItem>>()
     viewModel.instructions.subscribe(observer)
 
-    observer.assertValueAt(0, listOf(Instruction.Push(1000), Instruction.Print, Instruction.Mult, Instruction.Stop))
+    observer.assertValueAt(0, listOf(
+        InstructionItem(Instruction.Push(1000)),
+        InstructionItem(Instruction.Print),
+        InstructionItem(Instruction.Mult),
+        InstructionItem(Instruction.Stop)))
 
     viewModel.removeInstruction(2)
-    observer.assertValueAt(1, listOf(Instruction.Push(1000), Instruction.Print, Instruction.Stop))
+    observer.assertValueAt(1, listOf(
+        InstructionItem(Instruction.Push(1000)),
+        InstructionItem(Instruction.Print),
+        InstructionItem(Instruction.Stop)))
   }
 
   @Test

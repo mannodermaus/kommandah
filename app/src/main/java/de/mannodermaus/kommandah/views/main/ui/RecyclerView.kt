@@ -1,5 +1,6 @@
 package de.mannodermaus.kommandah.views.main.ui
 
+import android.animation.ObjectAnimator
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -11,9 +12,13 @@ import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.utils.ItemTouchHelperAware
 import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
+import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import kotlinx.android.synthetic.main.list_item_instruction.view.*
 
+/* Constants */
+
 private val itemLayoutResource = R.layout.list_item_instruction
+private val shakeAnimationValues = floatArrayOf(50f, -50f, 25f, -25f, 12f, -12f, 6f, -6f, 0f)
 
 /* Adapter */
 
@@ -21,12 +26,12 @@ private val itemLayoutResource = R.layout.list_item_instruction
  * Adapter implementation for the RecyclerView used on the main screen.
  */
 class InstructionAdapter(
-    private val clickListener: ListItemClickListener<Instruction>,
+    private val clickListener: ListItemClickListener<InstructionItem>,
     private val dragListener: ListItemDragListener)
   : RecyclerView.Adapter<InstructionViewHolder>(),
     ItemTouchHelperAware {
 
-  private var items: List<Instruction> = emptyList()
+  private var items: List<InstructionItem> = emptyList()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InstructionViewHolder {
     val inflater = LayoutInflater.from(parent.context)
@@ -53,7 +58,7 @@ class InstructionAdapter(
     notifyItemRemoved(position)
   }
 
-  fun update(newItems: List<Instruction>) {
+  fun update(newItems: List<InstructionItem>) {
     // Diff the current list against the new one & notify accordingly
     val oldItems = items
     items = newItems
@@ -75,11 +80,11 @@ class InstructionAdapter(
  * ViewHolder implementation for a cell in the RecyclerView used on the main screen.
  */
 class InstructionViewHolder(view: View,
-                            clickListener: ListItemClickListener<Instruction>,
+                            clickListener: ListItemClickListener<InstructionItem>,
                             dragListener: ListItemDragListener)
   : RecyclerView.ViewHolder(view) {
 
-  private var item: Instruction? = null
+  private var item: InstructionItem? = null
 
   init {
     itemView.setOnClickListener {
@@ -97,10 +102,31 @@ class InstructionViewHolder(view: View,
     }
   }
 
-  fun bind(item: Instruction) {
+  fun bind(item: InstructionItem) {
+    // Trivial properties
     this.item = item
-
     itemView.tvNumber.text = adapterPosition.toString()
-    itemView.tvInstructionName.text = item.describe()
+    itemView.tvInstructionName.text = item.instruction.describe()
+
+    // Decide the status indicator based on the item's properties
+    val colorRes = if (item.instruction is Instruction.Stop) {
+      R.drawable.bg_instruction_stop
+    } else when (item.state) {
+      InstructionItem.State.NONE -> R.color.main_instruction_none
+      InstructionItem.State.SUCCESS -> R.color.main_instruction_success
+      InstructionItem.State.ERROR -> R.color.main_instruction_error
+    }
+    itemView.status.setBackgroundResource(colorRes)
+
+    // Shake the item on errors
+    if (item.state == InstructionItem.State.ERROR) {
+      shake()
+    }
+  }
+
+  private fun shake() {
+    ObjectAnimator.ofFloat(itemView, "translationX", *shakeAnimationValues)
+        .setDuration(300 /* ms */)
+        .start()
   }
 }

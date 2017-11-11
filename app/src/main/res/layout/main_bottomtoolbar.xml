@@ -70,22 +70,36 @@
         app:srcCompat="@drawable/ic_chevron_up"/>
   </android.support.constraint.ConstraintLayout>
 
-  <ScrollView
-      android:id="@+id/consoleWindow"
+  <FrameLayout
       android:layout_width="match_parent"
-      android:layout_height="@dimen/main_bottomtoolbar_diff_height"
-      style="@style/Widget.Kommandah.ConsoleWindow"
-      android:focusable="false"
-      android:fillViewport="true">
+      android:layout_height="@dimen/main_bottomtoolbar_diff_height">
 
-    <TextView
-        android:id="@+id/tvConsoleWindow"
-        android:textAppearance="@style/TextAppearance.Kommandah.ConsoleOutput"
+    <ScrollView
+        android:id="@+id/consoleWindow"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/main_consolewindow_padding"
-        android:padding="@dimen/main_consolewindow_padding"
-        android:text="@string/main_console_default"
-        android:gravity="bottom"/>
-  </ScrollView>
+        android:layout_height="@dimen/main_bottomtoolbar_diff_height"
+        style="@style/Widget.Kommandah.ConsoleWindow"
+        android:focusable="false"
+        android:fillViewport="true">
+
+      <TextView
+          android:id="@+id/tvConsoleWindow"
+          android:textAppearance="@style/TextAppearance.Kommandah.ConsoleOutput"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_margin="@dimen/main_consolewindow_padding"
+          android:padding="@dimen/main_consolewindow_padding"
+          android:text="@string/main_console_default"
+          android:gravity="bottom"/>
+    </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@style/Widget.Kommandah.ProgressBar"
+        android:layout_gravity="top|end"
+        android:layout_margin="8dp"
+        android:indeterminate="true"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+  </FrameLayout>
 </LinearLayout>
