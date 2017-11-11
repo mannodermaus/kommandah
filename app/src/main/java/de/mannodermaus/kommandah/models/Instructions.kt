@@ -14,6 +14,7 @@ typealias Instructions = Map<Int, Instruction>
  * The different instructions understood by the Interpreter.
  */
 sealed class Instruction(protected val operator: String) {
+  open fun hasParameters(): Boolean = false
   open fun describe(): String = operator
   override fun toString(): String = javaClass.simpleName
 
@@ -26,6 +27,7 @@ sealed class Instruction(protected val operator: String) {
    * Jump to the instruction at index <i>address</i>
    */
   data class Call(val address: Int) : Instruction(operator = "CALL") {
+    override fun hasParameters() = true
     override fun describe(): String = "${super.describe()} $address"
   }
 
@@ -48,14 +50,7 @@ sealed class Instruction(protected val operator: String) {
    * Push the given argument to the stack
    */
   data class Push(val argument: Int) : Instruction(operator = "PUSH") {
+    override fun hasParameters() = true
     override fun describe(): String = "${super.describe()} $argument"
   }
 }
-
-/* Extensions */
-
-/**
- * Compile a set of Instructions into a Program,
- * which can then be executed by an Interpreter.
- */
-fun Instructions.compile(): Program = Program(this)

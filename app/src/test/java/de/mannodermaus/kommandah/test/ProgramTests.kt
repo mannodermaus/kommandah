@@ -41,7 +41,7 @@ class ProgramTests {
   }
 
   @Test
-  @DisplayName("Can't runProgram more than once")
+  @DisplayName("Can't execute more than once")
   fun cantExecuteMoreThanOnce() {
     val program = Program(mapOf(
         0 to Push(1009),
@@ -90,7 +90,7 @@ class ProgramTests {
 
     val cause = error.cause as ProgramException.IllegalStackAccess
     assertThat(cause.line).isEqualTo(1)
-    assertThat(cause.message).isEqualTo("Illegal Stack access at L1")
+    assertThat(cause.message).isEqualTo("Illegal Stack access on L1")
   }
 
   @Test
@@ -109,7 +109,7 @@ class ProgramTests {
 
     val cause = error.cause as ProgramException.IllegalInstructionAccess
     assertThat(cause.line).isEqualTo(0)
-    assertThat(cause.message).isEqualTo("Illegal Instruction access at L0")
+    assertThat(cause.message).isEqualTo("Illegal Access on L0: No instruction at address 42")
   }
 
   @Test
@@ -123,14 +123,12 @@ class ProgramTests {
     ))
 
     val results = wrongProgram.runBlocking()
-    wrongProgram.assertExecutionFailedWith<ProgramException.IllegalInstructionAccess>()
+    wrongProgram.assertExecutionFailedWith<ProgramException.MissingStopInstruction>()
 
     val error = results.first { it is ProgramOutput.Error } as ProgramOutput.Error
-    assertThat(error.cause).isInstanceOf(ProgramException.IllegalInstructionAccess::class.java)
-
-    val cause = error.cause as ProgramException.IllegalInstructionAccess
+    val cause = error.cause as ProgramException.MissingStopInstruction
     assertThat(cause.line).isEqualTo(3)
-    assertThat(cause.message).isEqualTo("Illegal Instruction access at L3")
+    assertThat(cause.message).isEqualTo("Illegal Access on L3: Did you forget to put a Stop instruction at the end?")
   }
 }
 

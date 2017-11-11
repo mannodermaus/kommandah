@@ -64,6 +64,12 @@ class MainViewModel
     instructions.onNext(items)
   }
 
+  fun replaceInstruction(position: Int, instruction: Instruction) {
+    val items = instructions.value.toMutableList()
+    items[position] = instruction
+    instructions.onNext(items)
+  }
+
   fun runProgram() {
     // Compile the instructions into a Program
     val program = Program(instructions.value

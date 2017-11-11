@@ -2,7 +2,6 @@ package de.mannodermaus.kommandah.models
 
 import android.support.annotation.CheckResult
 import java.util.*
-import kotlin.NoSuchElementException
 
 /**
  * Representation of a Program to be executed by an Interpreter.
@@ -79,9 +78,8 @@ data class Program(
         } else {
           // At this point, this will only ever be absent
           // if the user forgot to put the "Stop" instruction at the end.
-          // Map this case to an Illegal Instruction Access
-          // (TODO: Make this its own type?)
-          ProgramOutput.Error(ProgramException.IllegalInstructionAccess(pc))
+          // Map this case to a specialized Illegal Instruction Access
+          ProgramOutput.Error(ProgramException.MissingStopInstruction(pc))
         }
 
         // Determine exit conditions
@@ -125,14 +123,14 @@ data class Program(
           is Instruction.Call -> {
             // "Jump to the instruction at the given value"
             val newPc = instruction.address
-            lines.getValue(newPc) // Will throw on illegal access
+            lines[newPc] ?: throw NoSuchInstructionError(newPc)
             pc = newPc
           }
 
           is Instruction.Return -> {
             // "Pop one argument from the stack, jump to the instruction at that address"
             val newPc = stack.pop()
-            lines.getValue(newPc) // Will throw on illegal access
+            lines[newPc] ?: throw NoSuchInstructionError(newPc)
             pc = newPc
           }
 
@@ -157,9 +155,12 @@ data class Program(
       } catch (cause: Throwable) {
         // Assume construction error by the user, map to ProgramException
         val wrapped = when (cause) {
-          is EmptyStackException -> ProgramException.IllegalStackAccess(line = index)
-          is NoSuchElementException -> ProgramException.IllegalInstructionAccess(line = index)
-          else -> ProgramException.Unknown(cause)
+          is EmptyStackException ->
+            ProgramException.IllegalStackAccess(line = index)
+          is NoSuchInstructionError ->
+            ProgramException.IllegalInstructionAccess(line = index, address = cause.address)
+          else ->
+            ProgramException.Unknown(cause)
         }
         return ProgramOutput.Error(wrapped, instruction)
       }

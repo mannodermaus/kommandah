@@ -15,6 +15,8 @@ import dagger.android.DispatchingAndroidInjector
 import dagger.android.support.HasSupportFragmentInjector
 import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.di.HasViewModelProviderFactory
+import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.extensions.toolbar
 import de.mannodermaus.kommandah.utils.extensions.viewModel
@@ -32,6 +34,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(),
     HasSupportFragmentInjector,
     HasViewModelProviderFactory,
+    ListItemClickListener<Instruction>,
     ListItemDragListener {
 
   /* Injected Dependencies & Architecture  */
@@ -41,7 +44,7 @@ class MainActivity : AppCompatActivity(),
   private val viewModel by viewModel<MainActivity, MainViewModel>()
 
   /* List of Instructions */
-  private val listAdapter = InstructionAdapter(this)
+  private val listAdapter = InstructionAdapter(this, this)
   private lateinit var itemTouchHelper: ItemTouchHelper
 
   /* Console Handling */
@@ -75,9 +78,15 @@ class MainActivity : AppCompatActivity(),
     itemTouchHelper.attachToRecyclerView(rvInstructions)
   }
 
-  /* ListItemDragListener */
+  /* List Item Interactions */
 
-  override fun startDrag(holder: RecyclerView.ViewHolder) {
+  override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: Instruction) {
+    showInstructionEditDialog(this, item) { newItem ->
+      viewModel.replaceInstruction(holder.adapterPosition, newItem)
+    }
+  }
+
+  override fun startListItemDrag(holder: RecyclerView.ViewHolder) {
     itemTouchHelper.startDrag(holder)
   }
 
@@ -112,16 +121,17 @@ class MainActivity : AppCompatActivity(),
     // Click Listener
     disposables += buttonExecute.clicks().subscribe { viewModel.runProgram() }
 
+    // Enabled-State Events
+    disposables += viewModel.instructions.map { it.isNotEmpty() }.subscribe { hasItems ->
+      buttonExecute.isEnabled = hasItems
+    }
+
     // Icon Change Events
     disposables += viewModel.executionStatus.subscribe { status ->
       when (status) {
-        ExecutionStatus.PAUSED -> {
-          buttonExecute.setImageResource(R.drawable.ic_play)
-          buttonExecute.isEnabled = true
-        }
+        ExecutionStatus.PAUSED -> buttonExecute.setImageResource(R.drawable.bt_play)
         ExecutionStatus.RUNNING -> {
           buttonExecute.setImageResource(R.drawable.ic_pause)
-          buttonExecute.isEnabled = false
 
           // Show the console window if it isn't showing already
           bottomToolbarBehavior.state = BottomSheetBehavior.STATE_EXPANDED

@@ -16,4 +16,5 @@
   <string name="main_cd_expand">Show/Hide the Console</string>
   <string name="main_dialog_ok">Create</string>
   <string name="main_dialog_cancel">Cancel</string>
+  <string name="main_dialog_inputrequired">Required field</string>
 </resources>

@@ -3,8 +3,12 @@ package de.mannodermaus.kommandah.utils
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 
+interface ListItemClickListener<in T> {
+  fun handleListItemClick(holder: RecyclerView.ViewHolder, item: T)
+}
+
 interface ListItemDragListener {
-  fun startDrag(holder: RecyclerView.ViewHolder)
+  fun startListItemDrag(holder: RecyclerView.ViewHolder)
 }
 
 interface ItemTouchHelperAware {
