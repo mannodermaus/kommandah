@@ -3,7 +3,7 @@ package de.mannodermaus.kommandah
 import dagger.Component
 import dagger.android.AndroidInjectionModule
 import dagger.android.support.AndroidSupportInjectionModule
-import de.mannodermaus.kommandah.managers.db.PersistenceModule
+import de.mannodermaus.kommandah.managers.persistence.PersistenceModule
 import de.mannodermaus.kommandah.managers.runtime.RuntimeModule
 import de.mannodermaus.kommandah.managers.time.TimeModule
 import de.mannodermaus.kommandah.managers.viewmodel.ViewModelModule

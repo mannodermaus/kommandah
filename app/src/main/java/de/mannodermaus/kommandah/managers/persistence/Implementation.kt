@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.managers.db
+package de.mannodermaus.kommandah.managers.persistence
 
 import dagger.Module
 

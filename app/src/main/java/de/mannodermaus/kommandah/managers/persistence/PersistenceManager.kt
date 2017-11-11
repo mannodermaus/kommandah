@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.managers.db
+package de.mannodermaus.kommandah.managers.persistence
 
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramInfo
