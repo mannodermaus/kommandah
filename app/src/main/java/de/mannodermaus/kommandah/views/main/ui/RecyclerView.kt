@@ -106,7 +106,7 @@ class InstructionViewHolder(view: View,
     // Trivial properties
     this.item = item
     itemView.tvNumber.text = adapterPosition.toString()
-    itemView.tvInstructionName.text = item.instruction.describe()
+    itemView.tvInstructionName.text = item.instruction.toString()
 
     // Decide the status indicator based on the item's properties
     val colorRes = if (item.instruction is Instruction.Stop) {

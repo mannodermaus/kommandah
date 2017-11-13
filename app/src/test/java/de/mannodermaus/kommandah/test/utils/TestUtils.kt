@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.test
+package de.mannodermaus.kommandah.test.utils
 
 import de.mannodermaus.kommandah.models.ExitCode
 import de.mannodermaus.kommandah.models.Program

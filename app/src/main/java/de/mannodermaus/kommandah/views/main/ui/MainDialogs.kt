@@ -13,51 +13,6 @@ import de.mannodermaus.kommandah.models.InstructionParam
 import de.mannodermaus.kommandah.utils.extensions.addViews
 import de.mannodermaus.kommandah.utils.extensions.showDialog
 
-// FIXME This entire file is using kotlin-reflect because of time constraints.
-// Usually we'd prefer a cleaner list of available Instructions
-// and follow-up-logic, encapsulated as a data class or sth. other than this.
-
-/* Types */
-
-//private class InstructionChoice(val cls: KClass<Instruction>) {
-//  val parameters = cls.primaryConstructor?.parameters ?: emptyList()
-//  val prettyName: CharSequence by lazy {
-//    if (parameters.isEmpty()) {
-//      cls.simpleName ?: ""
-//
-//    } else {
-//      // Include parameters in the result
-//      SpannableStringBuilder()
-//          .append(cls.simpleName)
-//          .append(parameters.map { it.name }.joinToString(
-//              separator = ", ",
-//              prefix = " (",
-//              postfix = ")"),
-//              StyleSpan(Typeface.ITALIC), Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-//    }
-//  }
-//
-//  fun newInstance(vararg args: Any?): Instruction {
-//    return if (cls.objectInstance != null) {
-//      // e.g. "Print"
-//      cls.objectInstance as Instruction
-//
-//    } else {
-//      // e.g. "Push X"
-//      cls.primaryConstructor?.call(*args) as Instruction
-//    }
-//  }
-//}
-//
-///**
-// * Mapping between Instruction classes & their choice-related value objects.
-// * Evaluated once on demand, since its construction is pretty expensive.
-// */
-//private val INSTRUCTION_CHOICES_LIST = Instruction::class.nestedClasses
-//    .map { InstructionChoice(it as KClass<Instruction>) }
-
-/* Functions */
-
 /**
  * Present the dialog in which the user may select an Instruction to append to their Program.
  * The provided function is invoked upon selecting a choice.
@@ -77,7 +32,7 @@ fun showInstructionChooserDialog(context: Context, callback: (Instruction) -> Un
       // Otherwise, the callback is invoked immediately
       val metadata = Instruction.metadataFromOperator(allChoices[which])
       if (metadata.hasParameters) {
-        showParameterizedInstructionFollowupDialog(context, metadata, callback = callback)
+        showParametrizedInstructionFollowupDialog(context, metadata, callback = callback)
         false
 
       } else {
@@ -89,17 +44,17 @@ fun showInstructionChooserDialog(context: Context, callback: (Instruction) -> Un
 }
 
 fun showInstructionEditDialog(context: Context, instruction: Instruction, callback: (Instruction) -> Unit): MaterialDialog =
-    showParameterizedInstructionFollowupDialog(context, instruction.metadata(), instruction, callback)
+    showParametrizedInstructionFollowupDialog(context, instruction.metadata, instruction, callback)
 
 /* Private */
 
-private fun showParameterizedInstructionFollowupDialog(context: Context,
-                                                       metadata: InstructionMeta,
-                                                       initial: Instruction? = null,
-                                                       callback: (Instruction) -> Unit): MaterialDialog {
+private fun showParametrizedInstructionFollowupDialog(context: Context,
+                                                      metadata: InstructionMeta,
+                                                      initial: Instruction? = null,
+                                                      callback: (Instruction) -> Unit): MaterialDialog {
   // For each parameter that the Instruction requires upon creation,
   // insert an EditText into the dialog and require it to be non-empty upon confirmation
-  val editTexts = metadata.parameters.map { parameter ->
+  val editTexts = metadata.parameterTypes.map { parameter ->
     TextInputLayout(context).apply {
       addView(TextInputEditText(context).apply {
         // Derive the pre-populated text of the field
@@ -144,7 +99,7 @@ private fun showParameterizedInstructionFollowupDialog(context: Context,
 
       } else {
         // Try converting arguments to integers or use the Strings as-is
-        val inputValues = editTexts
+        val inputValues: Array<Any> = editTexts
             .map { it.editText!!.text.toString() }
             .map { it.toIntOrNull() ?: it }
             .toTypedArray()

@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(),
 
   override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: InstructionItem) {
     val instruction = item.instruction
-    if (instruction.metadata().hasParameters) {
+    if (instruction.metadata.hasParameters) {
       showInstructionEditDialog(this, instruction) { newItem ->
         viewModel.replaceInstruction(holder.adapterPosition, newItem)
       }

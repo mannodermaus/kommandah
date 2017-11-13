@@ -1,6 +1,7 @@
 package de.mannodermaus.kommandah.models
 
 import android.support.annotation.CheckResult
+import android.support.annotation.VisibleForTesting
 import java.util.*
 
 /**
@@ -31,7 +32,7 @@ import java.util.*
  * </pre></code>
  */
 data class Program(
-    private val instructions: Instructions,
+    val instructions: Instructions,
     // Storage for "virtual variables"
     private val stack: Stack<Int> = Stack()) {
 
@@ -51,6 +52,7 @@ data class Program(
   // Program Counter
   private var pc: Int = 0
 
+  @VisibleForTesting
   fun instructionAt(index: Int): Instruction? = instructions[index]
 
   /**

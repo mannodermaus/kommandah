@@ -1,4 +1,4 @@
-package de.mannodermaus.kommandah.test
+package de.mannodermaus.kommandah.test.models
 
 import de.mannodermaus.kommandah.models.Instruction.Call
 import de.mannodermaus.kommandah.models.Instruction.Mult
@@ -9,6 +9,9 @@ import de.mannodermaus.kommandah.models.Instruction.Stop
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramException
 import de.mannodermaus.kommandah.models.ProgramOutput
+import de.mannodermaus.kommandah.test.utils.assertExecutionFailedWith
+import de.mannodermaus.kommandah.test.utils.assertExecutionSuccessful
+import de.mannodermaus.kommandah.test.utils.stackOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals

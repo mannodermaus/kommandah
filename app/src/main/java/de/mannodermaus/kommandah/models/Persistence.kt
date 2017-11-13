@@ -1,3 +1,10 @@
 package de.mannodermaus.kommandah.models
 
-data class ProgramInfo(val name: String)
+import io.reactivex.Single
+
+interface ProgramInfo {
+  val id: Int
+  val title: String
+
+  fun load(): Single<Program>
+}

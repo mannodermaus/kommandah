@@ -5,7 +5,6 @@ import de.mannodermaus.kommandah.models.ProgramInfo
 import io.reactivex.Single
 
 interface PersistenceManager {
-  fun listPrograms(): Single<List<ProgramInfo>>
-  fun loadProgram(info: ProgramInfo): Single<Program>
+  fun listPrograms(): Single<out List<ProgramInfo>>
   fun saveProgram(program: Program, info: ProgramInfo?): Single<ProgramInfo>
 }

@@ -10,7 +10,7 @@ import de.mannodermaus.kommandah.managers.logging.LoggingInitializer
 import de.mannodermaus.kommandah.managers.time.TimeInitializer
 import javax.inject.Inject
 
-class App : Application(), HasActivityInjector {
+open class App : Application(), HasActivityInjector {
 
   @Inject lateinit var injector: DispatchingAndroidInjector<Activity>
   @Inject lateinit var timeInitializer: TimeInitializer
@@ -18,7 +18,7 @@ class App : Application(), HasActivityInjector {
 
   val component: AppComponent = createComponent()
 
-  protected fun createComponent() = DaggerAppComponent.builder()
+  open protected fun createComponent() = DaggerAppComponent.builder()
       .buildTypeComponent(DaggerBuildTypeComponent.create())
       .appModule(AppModule(this))
       .build()
