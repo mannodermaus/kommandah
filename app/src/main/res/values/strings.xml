@@ -17,4 +17,8 @@
   <string name="main_dialog_ok">Create</string>
   <string name="main_dialog_cancel">Cancel</string>
   <string name="main_dialog_inputrequired">Required field</string>
+  <string name="main_dialog_instructionline">Line</string>
+  <string name="main_dialog_instructionline_explanation">Leave empty to append after the last
+    instruction.
+  </string>
 </resources>

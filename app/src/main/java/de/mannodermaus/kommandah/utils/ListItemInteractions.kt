@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 
 interface ListItemClickListener<in T> {
-  fun handleListItemClick(holder: RecyclerView.ViewHolder, item: T)
+  fun handleListItemClick(holder: RecyclerView.ViewHolder, item: T?)
 }
 
 interface ListItemDragListener {

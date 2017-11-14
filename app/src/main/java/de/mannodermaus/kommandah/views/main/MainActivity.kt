@@ -25,8 +25,8 @@ import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
 import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
-import de.mannodermaus.kommandah.views.main.ui.showInstructionChooserDialog
-import de.mannodermaus.kommandah.views.main.ui.showInstructionEditDialog
+import de.mannodermaus.kommandah.views.main.ui.showCreateInstructionDialog
+import de.mannodermaus.kommandah.views.main.ui.showEditInstructionDialog
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity(),
     ListItemDragListener {
 
   /* Injected Dependencies & Architecture  */
-
   @Inject lateinit var injector: DispatchingAndroidInjector<Fragment>
   @Inject override lateinit var modelFactory: ViewModelProvider.Factory
   private val viewModel by viewModel<MainActivity, MainViewModel>()
@@ -85,21 +84,6 @@ class MainActivity : AppCompatActivity(),
     itemTouchHelper.attachToRecyclerView(rvInstructions)
   }
 
-  /* List Item Interactions */
-
-  override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: InstructionItem) {
-    val instruction = item.instruction
-    if (instruction.metadata.hasParameters) {
-      showInstructionEditDialog(this, instruction) { newItem ->
-        viewModel.replaceInstruction(holder.adapterPosition, newItem)
-      }
-    }
-  }
-
-  override fun startListItemDrag(holder: RecyclerView.ViewHolder) {
-    itemTouchHelper.startDrag(holder)
-  }
-
   /* Lifecycle */
 
   override fun onStart() {
@@ -120,11 +104,26 @@ class MainActivity : AppCompatActivity(),
     disposables.clear()
   }
 
+  /* List Item Interactions */
+
+  override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: InstructionItem?) {
+    item?.let {
+      // TODO Create dialog when clicking on "non-item"
+      showEditInstructionDialog(this, holder.adapterPosition, item.instruction) { newItem, old, new ->
+        viewModel.updateInstruction(newItem, old, new)
+      }
+    }
+  }
+
+  override fun startListItemDrag(holder: RecyclerView.ViewHolder) {
+    itemTouchHelper.startDrag(holder)
+  }
+
   /* Private */
 
   private fun setupListAdapter() {
     // Keep list of instructions up-to-date
-    disposables += viewModel.instructions.subscribe { listAdapter.update(it) }
+    disposables += viewModel.instructions().subscribe { listAdapter.update(it) }
   }
 
   private fun setupExecutionButton() {
@@ -132,12 +131,12 @@ class MainActivity : AppCompatActivity(),
     disposables += buttonExecute.clicks().subscribe { viewModel.runProgram() }
 
     // Enabled-State Events
-    disposables += viewModel.instructions.map { it.isNotEmpty() }.subscribe { hasItems ->
+    disposables += viewModel.instructions().map { it.isNotEmpty() }.subscribe { hasItems ->
       buttonExecute.isEnabled = hasItems
     }
 
     // Icon Change Events
-    disposables += viewModel.executionStatus.subscribe { status ->
+    disposables += viewModel.executionStatus().subscribe { status ->
       when (status) {
         ExecutionStatus.PAUSED -> buttonExecute.setImageResource(R.drawable.bt_play)
         ExecutionStatus.RUNNING -> {
@@ -154,9 +153,7 @@ class MainActivity : AppCompatActivity(),
   private fun setupAddButton() {
     // Click Listener
     disposables += buttonAdd.clicks().subscribe {
-      showInstructionChooserDialog(this) {
-        viewModel.addInstruction(it)
-      }
+      showCreateInstructionDialog(this) { viewModel.addInstruction(it) }
     }
   }
 
@@ -188,8 +185,8 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupConsoleWindow() {
     // Connect to the ViewModel
-    disposables += viewModel.consoleMessages.subscribe { console.handle(it) }
-    disposables += viewModel.executionStatus
+    disposables += viewModel.consoleMessages().subscribe { console.handle(it) }
+    disposables += viewModel.executionStatus()
         .map { it == ExecutionStatus.RUNNING }
         .subscribe { isRunning -> progressBar.setVisibleIf(isRunning) }
   }
@@ -205,6 +202,13 @@ class MainActivity : AppCompatActivity(),
       viewModel.swapInstructions(source.adapterPosition, target.adapterPosition)
       return true
     }
+
+    override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
+        if (viewModel.hasInstructionAt(viewHolder.adapterPosition)) {
+          ItemTouchHelper.START or ItemTouchHelper.END
+        } else {
+          0
+        }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
       viewModel.removeInstruction(viewHolder.adapterPosition)

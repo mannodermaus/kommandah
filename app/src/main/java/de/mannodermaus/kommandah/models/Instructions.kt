@@ -11,7 +11,7 @@ import io.michaelrocks.bimap.BiMap
  * TODO This typealias will eventually be replaced by a List-like interface which allows
  * easier insertions etc.
  */
-typealias Instructions = Map<Int, Instruction>
+typealias Instructions = Map<Int, Instruction?>
 
 typealias Operator = String
 

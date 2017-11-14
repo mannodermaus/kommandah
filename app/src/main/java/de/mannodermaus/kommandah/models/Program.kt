@@ -109,9 +109,13 @@ data class Program(
    * Representation of a single line inside a program,
    * backed by a low-level Instruction.
    */
-  private inner class Line(val index: Int, val instruction: Instruction) {
+  private inner class Line(val index: Int, val instruction: Instruction?) {
     fun execute(): ProgramOutput {
       try {
+        if (instruction == null) {
+          throw NoSuchInstructionError(index)
+        }
+
         when (instruction) {
           is Instruction.Mult -> {
             // "Pop two values from the stack, multiply them, push the result back"

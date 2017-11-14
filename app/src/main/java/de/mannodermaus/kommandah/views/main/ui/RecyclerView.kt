@@ -31,7 +31,7 @@ class InstructionAdapter(
   : RecyclerView.Adapter<InstructionViewHolder>(),
     ItemTouchHelperAware {
 
-  private var items: List<InstructionItem> = emptyList()
+  private var items: List<InstructionItem?> = emptyList()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InstructionViewHolder {
     val inflater = LayoutInflater.from(parent.context)
@@ -58,7 +58,7 @@ class InstructionAdapter(
     notifyItemRemoved(position)
   }
 
-  fun update(newItems: List<InstructionItem>) {
+  fun update(newItems: List<InstructionItem?>) {
     // Diff the current list against the new one & notify accordingly
     val oldItems = items
     items = newItems
@@ -88,25 +88,37 @@ class InstructionViewHolder(view: View,
 
   init {
     itemView.setOnClickListener {
-      item?.let {
-        clickListener.handleListItemClick(this, it)
-      }
+      clickListener.handleListItemClick(this, item)
     }
 
-    // Allow drag-and-drop for cells
+    // Allow drag-and-drop for cells, but only those that actually "exist"
     itemView.ivDragHandle.setOnTouchListener { _, event ->
-      when (event.actionMasked) {
-        MotionEvent.ACTION_DOWN -> dragListener.startListItemDrag(this@InstructionViewHolder)
+      item?.let {
+        when (event.actionMasked) {
+          MotionEvent.ACTION_DOWN -> dragListener.startListItemDrag(this@InstructionViewHolder)
+        }
       }
       false
     }
   }
 
-  fun bind(item: InstructionItem) {
-    // Trivial properties
+  fun bind(item: InstructionItem?) {
     this.item = item
+
+    if (item != null) {
+      bindActual(item)
+    } else {
+      bindPlaceholder()
+    }
+  }
+
+  /**
+   * Bind an actual, existing instruction to this ViewHolder
+   */
+  private fun bindActual(item: InstructionItem) {
     itemView.tvNumber.text = adapterPosition.toString()
     itemView.tvInstructionName.text = item.instruction.toString()
+    itemView.alpha = 1.0f
 
     // Decide the status indicator based on the item's properties
     val colorRes = if (item.instruction is Instruction.Stop) {
@@ -122,6 +134,16 @@ class InstructionViewHolder(view: View,
     if (item.state == InstructionItem.State.ERROR) {
       shake()
     }
+  }
+
+  /**
+   * Bind the placeholder to to this ViewHolder
+   */
+  private fun bindPlaceholder() {
+    itemView.tvNumber.text = adapterPosition.toString()
+    itemView.tvInstructionName.text = ""
+    itemView.status.setBackgroundColor(0x00000000)
+    itemView.alpha = 0.4f
   }
 
   private fun shake() {

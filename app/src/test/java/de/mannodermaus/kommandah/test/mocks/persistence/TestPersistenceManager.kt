@@ -10,12 +10,7 @@ class TestPersistenceManager : PersistenceManager {
     TODO("not implemented")
   }
 
-  override fun loadProgram(info: ProgramInfo): Single<Program> {
-    TODO("not implemented")
-  }
-
   override fun saveProgram(program: Program, info: ProgramInfo?): Single<ProgramInfo> {
     TODO("not implemented")
   }
-
 }

@@ -4,16 +4,17 @@ import android.arch.lifecycle.ViewModel
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.models.OrderedMap
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
+import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
-import java.util.*
 import javax.inject.Inject
 
 class MainViewModel
@@ -22,19 +23,19 @@ class MainViewModel
   /**
    * Stream of events related to the Instructions that make up the current Program
    */
-  val instructions: BehaviorSubject<List<InstructionItem>> =
-      BehaviorSubject.createDefault(emptyList())
+  private val instructions: BehaviorSubject<OrderedMap<InstructionItem>> =
+      BehaviorSubject.createDefault(OrderedMap())
 
   /**
    * Stream of events related to the current execution status of the current Program
    */
-  val executionStatus: BehaviorSubject<ExecutionStatus> =
+  private val executionStatus: BehaviorSubject<ExecutionStatus> =
       BehaviorSubject.createDefault(ExecutionStatus.PAUSED)
 
   /**
    * Stream of events related to handling console messages during execution
    */
-  val consoleMessages: BehaviorSubject<ConsoleEvent> =
+  private val consoleMessages: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
 
   private val subscriptions: CompositeDisposable = CompositeDisposable()
@@ -46,13 +47,22 @@ class MainViewModel
     subscriptions.clear()
   }
 
+  /* Streams; doubled from properties to hide BehaviorSubjects from consumers */
+
+  fun instructions(): Observable<List<InstructionItem?>> =
+      instructions.map { it.nullPaddedValues() }
+
+  fun executionStatus(): Observable<ExecutionStatus> = executionStatus
+
+  fun consoleMessages(): Observable<ConsoleEvent> = consoleMessages
+
   /* Interactions */
 
   fun runProgram() {
     // Compile the instructions into a Program
-    val program = Program(instructions.value
+    val program = Program(instructions.value.nullPaddedValues()
         .withIndex()
-        .associate { it.index to it.value.instruction })
+        .associate { it.index to it.value?.instruction })
 
     // Interpret the program, passing through events as side-effects
     subscriptions += interpreter.execute(program, ExecutionEnvironment())
@@ -87,7 +97,7 @@ class MainViewModel
   }
 
   /**
-   * Appends the given instruction to the end of the item list,
+   * Appends the given instruction to the end of the Program,
    * then fires a notification to subscribers of the data.
    */
   fun addInstruction(instruction: Instruction) {
@@ -95,11 +105,33 @@ class MainViewModel
   }
 
   /**
+   * Update the given instruction at the provided index, if any,
+   * then fires a notification to subscribers of the data.
+   * If no positional index is given, the instruction is appended to the end.
+   */
+  fun updateInstruction(instruction: Instruction, position: Int, moveToPosition: Int?) {
+    updateItemsInternal {
+      if (moveToPosition != null) {
+        // An existing item is moving to a new position.
+        // Delete the current one at the old position first
+        val oldItem = it.remove(position)!!
+        it.insertBefore(moveToPosition, oldItem.copy(instruction = instruction))
+
+      } else {
+        // The item remained at the same position; simply replace
+        it[position] = it.getValue(position).copy(instruction = instruction)
+      }
+    }
+  }
+
+  /**
    * Swaps the instructions at the given positions with each other,
    * then fires a notification to subscribers of the data.
    */
   fun swapInstructions(fromPosition: Int, toPosition: Int) {
-    updateItemsInternal { Collections.swap(it, fromPosition, toPosition) }
+    updateItemsInternal {
+      it.swap(fromPosition, toPosition)
+    }
   }
 
   /**
@@ -107,16 +139,10 @@ class MainViewModel
    * then fires a notification to subscribers of the data.
    */
   fun removeInstruction(position: Int) {
-    updateItemsInternal { it.removeAt(position) }
+    updateItemsInternal { it.remove(position) }
   }
 
-  /**
-   * Replaces the instruction at the given position with the new one,
-   * then fires a notification to subscribers of the data.
-   */
-  fun replaceInstruction(position: Int, instruction: Instruction) {
-    updateItemsInternal { it[position] = it[position].copy(instruction = instruction) }
-  }
+  fun hasInstructionAt(position: Int): Boolean = instructions.value.containsKey(position)
 
   /* Private */
 
@@ -139,8 +165,11 @@ class MainViewModel
    * providing a UI hint about the success of each line.
    */
   private fun updateInstructionStatus(position: Int, state: InstructionItem.State) {
-    updateItemsInternal {
-      it[position] = it[position].copy(state = state)
+    if (position in 0 until instructions.value.size) {
+      updateItemsInternal { items ->
+        val instruction = items[position]
+        instruction?.let { items[position] = instruction.copy(state = state) }
+      }
     }
   }
 
@@ -150,8 +179,8 @@ class MainViewModel
    * of mutating the item list is so common in the public API
    * of this ViewModel, it has been extracted to its own inline method.
    */
-  private inline fun updateItemsInternal(function: (MutableList<InstructionItem>) -> Unit) {
-    val items = instructions.value.toMutableList()
+  private inline fun updateItemsInternal(function: (OrderedMap<InstructionItem>) -> Unit) {
+    val items = instructions.value
     function.invoke(items)
     instructions.onNext(items)
   }
