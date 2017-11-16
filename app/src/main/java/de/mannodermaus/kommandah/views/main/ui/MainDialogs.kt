@@ -38,6 +38,19 @@ typealias OnInstructionUpdated = (Instruction, Int, Int?) -> Unit
 
 /* Functions */
 
+fun showEditTitleDialog(context: Context, prefill: CharSequence, callback: (String) -> Unit): MaterialDialog {
+  return context.showDialog {
+    title(R.string.main_dialog_editprogram_title)
+    input(
+        context.getString(R.string.main_dialog_editprogram_hint),
+        prefill,
+        false,
+        { _, text -> callback.invoke(text.toString()) })
+    positiveText(R.string.main_dialog_ok)
+    negativeText(R.string.main_dialog_cancel)
+  }
+}
+
 /**
  * Present the dialog in which the user may select an Instruction to append to their Program.
  * The provided function is invoked upon selecting a choice.

@@ -2,13 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
   <item
-      android:id="@+id/main_drawer_section_program"
-      android:title="@string/main_drawer_section_program">
+      android:id="@+id/main_drawer_section_currentprogram"
+      android:title="@string/main_drawer_section_currentprogram">
     <menu>
-      <item
-          android:id="@+id/actionLoadProgram"
-          android:icon="@drawable/ic_briefcase_upload"
-          android:title="@string/main_drawer_load"/>
 
       <item
           android:id="@+id/actionSaveProgram"

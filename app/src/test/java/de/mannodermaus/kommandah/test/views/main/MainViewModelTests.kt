@@ -1,27 +1,33 @@
 package de.mannodermaus.kommandah.test.views.main
 
-import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.test.managers.runtime.InstantInterpreter
 import de.mannodermaus.kommandah.test.mocks.persistence.TestPersistenceManager
+import de.mannodermaus.kommandah.test.utils.extensions.assertLatestValue
 import de.mannodermaus.kommandah.views.main.MainViewModel
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
+import de.mannodermaus.kommandah.views.main.models.ExecutionState
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import io.reactivex.android.plugins.RxAndroidPlugins
 import io.reactivex.observers.TestObserver
 import io.reactivex.plugins.RxJavaPlugins
 import io.reactivex.schedulers.Schedulers
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.threeten.bp.Clock
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
 
 class MainViewModelTests {
 
   private lateinit var interpreter: Interpreter
-  private lateinit var persistence: PersistenceManager
-  lateinit var viewModel: MainViewModel
+  private lateinit var clock: Clock
+  private lateinit var persistence: TestPersistenceManager
+  private lateinit var viewModel: MainViewModel
 
   companion object {
     @BeforeAll
@@ -39,7 +45,8 @@ class MainViewModelTests {
   fun beforeEach() {
     // TODO Leverage DI & Test modules
     interpreter = InstantInterpreter()
-    persistence = TestPersistenceManager()
+    clock = Clock.fixed(Instant.ofEpochMilli(0), ZoneId.of("UTC"))
+    persistence = TestPersistenceManager(clock)
     viewModel = MainViewModel(interpreter, persistence)
   }
 
@@ -153,5 +160,20 @@ class MainViewModelTests {
         ConsoleEvent.Message(1, "1000"),
         ConsoleEvent.Finished
     ))
+  }
+
+  @Test
+  @DisplayName("Save Program: Works as expected")
+  fun saveProgramWorksAsExpected() {
+    val executionStateObserver = TestObserver<ExecutionState>()
+    viewModel.executionState().subscribe(executionStateObserver)
+
+    // Prepare and execute the Save operation
+    viewModel.updateProgramTitle("My Program")
+    viewModel.saveProgram()
+
+    // Assert
+    executionStateObserver.assertLatestValue { it.programTitle == "My Program" }
+    assertThat(persistence.infos.value).hasSize(1)
   }
 }

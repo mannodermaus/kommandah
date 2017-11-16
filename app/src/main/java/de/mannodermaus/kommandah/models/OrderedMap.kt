@@ -6,9 +6,13 @@ package de.mannodermaus.kommandah.models
  *
  * Using this class, you can model "indexed lists with gaps".
  */
-class OrderedMap<T> : LinkedHashMap<Int, T>() {
+class OrderedMap<T>() : LinkedHashMap<Int, T>() {
 
   private var highestPosition: Int = 0
+
+  constructor(other: Map<Int, T>) : this() {
+    other.forEach { put(it.key, it.value) }
+  }
 
   /* New API */
 

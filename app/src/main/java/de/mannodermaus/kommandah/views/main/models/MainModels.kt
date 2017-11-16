@@ -1,6 +1,7 @@
 package de.mannodermaus.kommandah.views.main.models
 
 import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.models.OrderedMap
 import de.mannodermaus.kommandah.models.ProgramException
 
 /**
@@ -18,7 +19,18 @@ data class InstructionItem(val instruction: Instruction, val state: State = Stat
 }
 
 /**
+ * The state of the current program held inside the ViewModel.
+ * This holds the internal representation of a "session" inside the app
+ */
+data class ProgramState(
+    val savedId: Long? = null,
+    val title: String? = null,
+    val instructions: OrderedMap<InstructionItem> = OrderedMap(),
+    val running: Boolean = false)
+
+/**
  * Different states that the execution of a Program can be in.
+ * Unlike [ProgramState], this class is exposed to the View via the ViewModel.
  */
 data class ExecutionState(
     /** Whether or not the current program is being executed */

@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
+import android.view.Menu
 import android.view.View
 import android.widget.TextView
 import com.jakewharton.rxbinding2.view.clicks
@@ -19,6 +20,7 @@ import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
+import de.mannodermaus.kommandah.utils.extensions.format
 import de.mannodermaus.kommandah.utils.extensions.setVisibleIf
 import de.mannodermaus.kommandah.utils.extensions.toggleDrawer
 import de.mannodermaus.kommandah.utils.extensions.viewModel
@@ -28,12 +30,16 @@ import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
 import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
 import de.mannodermaus.kommandah.views.main.ui.showCreateInstructionDialog
 import de.mannodermaus.kommandah.views.main.ui.showEditInstructionDialog
+import de.mannodermaus.kommandah.views.main.ui.showEditTitleDialog
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_bottomtoolbar.*
-import timber.log.Timber
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
 import javax.inject.Inject
+
+private const val NUM_RECENT_PROGRAMS = 3
 
 /**
  * The main screen of the application.
@@ -66,6 +72,7 @@ class MainActivity : AppCompatActivity(),
   }
 
   /* Other */
+  private val instantFormatter by lazy { DateTimeFormatter.ofPattern(getString(R.string.format_datetime)) }
   private val disposables: CompositeDisposable = CompositeDisposable()
 
   override fun supportFragmentInjector(): AndroidInjector<Fragment> =
@@ -152,20 +159,41 @@ class MainActivity : AppCompatActivity(),
   private fun setupDrawer() {
     // Connect to ViewModel
     disposables += viewModel.executionState().subscribe {
-      // kotlin-android-extensions won't work here
       tvDrawerHeaderProgram.text = it.programTitle ?: getString(R.string.main_untitledprogram)
     }
+    disposables += tvDrawerHeaderProgram.clicks().subscribe {
+      showEditTitleDialog(this, tvDrawerHeaderProgram.text) {
+        viewModel.updateProgramTitle(it)
+      }
+    }
+
+    disposables += viewModel.listRecentPrograms(NUM_RECENT_PROGRAMS)
+        .subscribe { savedPrograms ->
+          // Dynamically update the list of recently opened Programs
+          val groupId = R.id.main_drawer_section_recentprograms
+          navigation.menu.removeGroup(groupId)
+          val group = navigation.menu.addSubMenu(
+              groupId,
+              Menu.NONE,
+              Menu.NONE,
+              R.string.main_drawer_section_recentprograms)
+
+          savedPrograms.forEach { program ->
+            val label = "${program.title} (${program.updated.format(instantFormatter)})"
+            val item = group.add(groupId, Menu.NONE, Menu.NONE, label)
+            item.setOnMenuItemClickListener {
+              viewModel.loadProgram(program)
+              true
+            }
+          }
+        }
 
     // Click listeners
     buttonDrawer.setOnClickListener { drawer.toggleDrawer(GravityCompat.START) }
     navigation.setNavigationItemSelectedListener {
       when (it.itemId) {
-        R.id.actionLoadProgram -> {
-          Timber.w("Load Programs")
-          true
-        }
         R.id.actionSaveProgram -> {
-          Timber.w("Save Program")
+          viewModel.saveProgram()
           true
         }
         else -> false

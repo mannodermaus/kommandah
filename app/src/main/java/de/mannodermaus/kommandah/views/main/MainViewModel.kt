@@ -7,11 +7,13 @@ import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.OrderedMap
 import de.mannodermaus.kommandah.models.Program
+import de.mannodermaus.kommandah.models.ProgramInfo
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.ExecutionState
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
+import de.mannodermaus.kommandah.views.main.models.ProgramState
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
@@ -23,11 +25,9 @@ class MainViewModel @Inject constructor(
     private val persistence: PersistenceManager
 ) : ViewModel() {
 
-  private val instructions: BehaviorSubject<OrderedMap<InstructionItem>> =
-      BehaviorSubject.createDefault(OrderedMap())
-  private val executionState: BehaviorSubject<ExecutionState> =
-      BehaviorSubject.createDefault(ExecutionState(running = false, programTitle = null))
-  private val consoleMessages: BehaviorSubject<ConsoleEvent> =
+  private val programStateChanges: BehaviorSubject<ProgramState> =
+      BehaviorSubject.createDefault(ProgramState())
+  private val consoleMessagesStream: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
   private val subscriptions: CompositeDisposable = CompositeDisposable()
 
@@ -45,29 +45,87 @@ class MainViewModel @Inject constructor(
    * Note that the List contains null values on "absent"/"empty" items.
    */
   fun instructions(): Observable<List<InstructionItem?>> =
-      instructions.map { it.nullPaddedValues }
+      programStateChanges.map { it.instructions.nullPaddedValues }
+          .distinctUntilChanged()
+          .async()
 
   /**
    * Stream of changes to the Program's execution status, either "Executing" or "Paused".
    */
-  fun executionState(): Observable<ExecutionState> = executionState
+  fun executionState(): Observable<ExecutionState> =
+      programStateChanges.map { ExecutionState(running = it.running, programTitle = it.title) }
+          .distinctUntilChanged()
+          .async()
 
   /**
    * Stream of messages to print to a Console.
    */
-  fun consoleMessages(): Observable<ConsoleEvent> = consoleMessages
+  fun consoleMessages(): Observable<ConsoleEvent> = consoleMessagesStream.async()
 
   /* Interactions */
+
+  /**
+   * Obtains the list of saved Programs asynchronously.
+   */
+  fun listRecentPrograms(count: Int) = persistence.listRecentPrograms(count).async()
+
+  /**
+   * Loads the given Program into the ViewModel.
+   */
+  fun loadProgram(info: ProgramInfo) {
+    subscriptions += info.load()
+        .async()
+        .subscribe { program ->
+          // Convert the Program's instructions into
+          // the mutable structure exposed by the screen.
+          val mappedInstructions = OrderedMap(program.instructions
+              .filter { it.value != null }
+              .map { it.key to InstructionItem(it.value!!) }
+              .associate { it })
+
+          updateProgramState {
+            it.copy(
+                savedId = info.id,
+                title = info.title,
+                instructions = mappedInstructions)
+          }
+        }
+  }
+
+  /**
+   * Updates the current Program's title with the given text.
+   */
+  fun updateProgramTitle(title: String) {
+    updateProgramState { it.copy(title = title) }
+  }
+
+  /**
+   * Stores the current Program asynchronously, assigning the given title to it.
+   */
+  fun saveProgram() {
+    subscriptions += persistence.saveProgram(
+        program = compileInstructions(),
+        id = currentProgramState.savedId,
+        title = currentProgramState.title)
+        .doOnSuccess { result ->
+          updateProgramState {
+            // Store the persistence identifiers locally as well
+            it.copy(
+                savedId = result.id,
+                title = result.title)
+          }
+        }
+        .toCompletable()
+        .async()
+        .subscribe()
+  }
 
   /**
    * Using the current List of Instructions, execute the Program
    * and notify subscribers of the other stream-based functions along the way.
    */
   fun runProgram() {
-    // Compile the instructions into a Program
-    val program = Program(instructions.value.nullPaddedValues
-        .withIndex()
-        .associate { it.index to it.value?.instruction })
+    val program = compileInstructions()
 
     // Interpret the program, passing through events as side-effects
     subscriptions += interpreter.execute(program, ExecutionEnvironment())
@@ -75,8 +133,8 @@ class MainViewModel @Inject constructor(
         .doOnSubscribe {
           // Update the execution status
           clearInstructionState()
-          executionState.onNext(executionState.value.copy(running = true))
-          consoleMessages.onNext(ConsoleEvent.Clear)
+          updateProgramState { it.copy(running = true) }
+          consoleMessagesStream.onNext(ConsoleEvent.Clear)
         }
         .doOnNext {
           // Handle intermediate item updates
@@ -88,15 +146,15 @@ class MainViewModel @Inject constructor(
         .doOnNext {
           // Handle Console Output
           when (it) {
-            is ProgramOutput.Started -> consoleMessages.onNext(ConsoleEvent.Started(it.numLines))
-            is ProgramOutput.Step -> it.message?.let { msg -> consoleMessages.onNext(ConsoleEvent.Message(it.line, msg)) }
-            is ProgramOutput.Error -> consoleMessages.onNext(ConsoleEvent.Error(it.cause, it.instruction))
-            is ProgramOutput.Completed -> consoleMessages.onNext(ConsoleEvent.Finished)
+            is ProgramOutput.Started -> consoleMessagesStream.onNext(ConsoleEvent.Started(it.numLines))
+            is ProgramOutput.Step -> it.message?.let { msg -> consoleMessagesStream.onNext(ConsoleEvent.Message(it.line, msg)) }
+            is ProgramOutput.Error -> consoleMessagesStream.onNext(ConsoleEvent.Error(it.cause, it.instruction))
+            is ProgramOutput.Completed -> consoleMessagesStream.onNext(ConsoleEvent.Finished)
           }
         }
         .doOnTerminate {
           // Reset the execution status
-          executionState.onNext(executionState.value.copy(running = false))
+          updateProgramState { it.copy(running = false) }
         }
         .subscribe()
   }
@@ -106,7 +164,7 @@ class MainViewModel @Inject constructor(
    * then fires a notification to subscribers of the data.
    */
   fun addInstruction(instruction: Instruction) {
-    updateItemsInternal { it += InstructionItem(instruction) }
+    updateInstructions { it += InstructionItem(instruction) }
   }
 
   /**
@@ -115,7 +173,7 @@ class MainViewModel @Inject constructor(
    * If no positional index is given, the instruction is appended to the end.
    */
   fun updateInstruction(instruction: Instruction, position: Int, moveToPosition: Int?) {
-    updateItemsInternal {
+    updateInstructions {
       if (moveToPosition != null) {
         // An existing item is moving to a new position.
         // Delete the current one at the old position first
@@ -134,7 +192,7 @@ class MainViewModel @Inject constructor(
    * then fires a notification to subscribers of the data.
    */
   fun swapInstructions(fromPosition: Int, toPosition: Int) {
-    updateItemsInternal { it.swap(fromPosition, toPosition) }
+    updateInstructions { it.swap(fromPosition, toPosition) }
   }
 
   /**
@@ -142,15 +200,23 @@ class MainViewModel @Inject constructor(
    * then fires a notification to subscribers of the data.
    */
   fun removeInstruction(position: Int) {
-    updateItemsInternal { it.remove(position) }
+    updateInstructions { it.remove(position) }
   }
 
   /**
    * Checks whether or not there is an Instruction placed at the given position.
    */
-  fun hasInstructionAt(position: Int): Boolean = instructions.value.containsKey(position)
+  fun hasInstructionAt(position: Int): Boolean = currentProgramState.instructions.containsKey(position)
 
   /* Private */
+
+  /**
+   * Compiles the current list of Instructions into a Program, and returns that.
+   */
+  private fun compileInstructions() =
+      Program(currentProgramState.instructions.nullPaddedValues
+          .withIndex()
+          .associate { it.index to it.value?.instruction })
 
   /**
    * Reset all items' "State" to NONE.
@@ -158,7 +224,7 @@ class MainViewModel @Inject constructor(
    * related to success or error for each instruction.
    */
   private fun clearInstructionState() {
-    updateItemsInternal {
+    updateInstructions {
       it.forEachIndexed { position, item ->
         it[position] = item.copy(state = InstructionItem.State.NONE)
       }
@@ -171,12 +237,21 @@ class MainViewModel @Inject constructor(
    * providing a UI hint about the success of each line.
    */
   private fun updateInstructionStatus(position: Int, state: InstructionItem.State) {
-    if (position in 0 until instructions.value.size) {
-      updateItemsInternal { items ->
+    if (position in 0 until currentProgramState.instructions.size) {
+      updateInstructions { items ->
         val instruction = items[position]
         instruction?.let { items[position] = instruction.copy(state = state) }
       }
     }
+  }
+
+  /**
+   * Updates the current Execution State by means of the function passed in.
+   */
+  private inline fun updateProgramState(function: (ProgramState) -> ProgramState) {
+    val currentState = programStateChanges.value
+    val newState = function.invoke(currentState)
+    programStateChanges.onNext(newState)
   }
 
   /**
@@ -185,9 +260,12 @@ class MainViewModel @Inject constructor(
    * of mutating the item list is so common in the public API
    * of this ViewModel, it has been extracted to its own inline method.
    */
-  private inline fun updateItemsInternal(function: (OrderedMap<InstructionItem>) -> Unit) {
-    val items = instructions.value
-    function.invoke(items)
-    instructions.onNext(items)
+  private inline fun updateInstructions(function: (OrderedMap<InstructionItem>) -> Unit) {
+    val currentInstructions = currentProgramState.instructions
+    function.invoke(currentInstructions)
+    programStateChanges.onNext(currentProgramState.copy(instructions = currentInstructions))
   }
+
+  private val currentProgramState
+    get() = programStateChanges.value
 }

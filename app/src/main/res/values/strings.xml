@@ -23,6 +23,10 @@
   </string>
   <string name="main_drawer_load">Load Program</string>
   <string name="main_drawer_save">Save Program</string>
-  <string name="main_drawer_section_program">Program</string>
-  <string name="main_untitledprogram">New Program</string>
+  <string name="main_drawer_section_currentprogram">Current Program</string>
+  <string name="main_untitledprogram">Untitled Program</string>
+  <string name="main_drawer_section_recentprograms">Recently Opened</string>
+  <string name="format_datetime">MMM d, HH:mm</string>
+  <string name="main_dialog_editprogram_title">Name your Program</string>
+  <string name="main_dialog_editprogram_hint">Title</string>
 </resources>

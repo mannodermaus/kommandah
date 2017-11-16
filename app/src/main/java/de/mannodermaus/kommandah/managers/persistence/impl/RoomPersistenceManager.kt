@@ -11,7 +11,11 @@ import android.arch.persistence.room.Query
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.arch.persistence.room.Transaction
+import android.arch.persistence.room.TypeConverter
+import android.arch.persistence.room.TypeConverters
+import android.arch.persistence.room.Update
 import de.mannodermaus.kommandah.App
+import de.mannodermaus.kommandah.R
 import de.mannodermaus.kommandah.managers.persistence.Base64Factory
 import de.mannodermaus.kommandah.managers.persistence.Base64String
 import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
@@ -22,40 +26,50 @@ import de.mannodermaus.kommandah.utils.extensions.decodeFromBase64
 import de.mannodermaus.kommandah.utils.extensions.encodeToBase64
 import io.reactivex.Flowable
 import io.reactivex.Single
+import org.threeten.bp.Clock
+import org.threeten.bp.Instant
 
 // Implementation of the app's Persistence layer
 // using the Room Persistence Library:
 // https://developer.android.com/topic/libraries/architecture/room.html
 
 class RoomPersistenceManager(
-    app: App,
-    private val base64Factory: Base64Factory) : PersistenceManager {
+    private val app: App,
+    private val base64Factory: Base64Factory,
+    private val clock: Clock
+) : PersistenceManager {
 
   private val db: AppDatabase = Room
       .databaseBuilder(app, AppDatabase::class.java, "kommandah")
       .build()
 
-  override fun listPrograms(): Single<out List<ProgramInfo>> {
+  override fun listRecentPrograms(count: Int): Flowable<out List<ProgramInfo>> {
     return db.programDao()
         .listAll()
-        .map { toProgramInfo(it) }
-        .toList()
+        .flatMapSingle {
+          Flowable.fromIterable(it)
+              .take(count.toLong())
+              .map { toProgramInfo(it) }
+              .toList()
+        }
   }
 
-  override fun saveProgram(program: Program, info: ProgramInfo?): Single<ProgramInfo> =
+  override fun saveProgram(program: Program, id: Long?, title: String?): Single<ProgramInfo> =
       db.programDao()
-          .insert(
+          .upsert(
               RoomTableItem(
-                  id = info?.id,
-                  title = info?.title ?: "untitled",
+                  id = id,
+                  updated = Instant.now(clock),
+                  title = title ?: app.getString(R.string.main_untitledprogram),
                   data = serializeProgram(program, base64Factory)))
           .map { toProgramInfo(it) }
 
   private fun toProgramInfo(entity: RoomTableItem): ProgramInfo =
-      RoomProgramInfo(entity.id!!, entity.title, entity.data)
+      RoomProgramInfo(entity.id!!, entity.updated, entity.title, entity.data)
 
   private inner class RoomProgramInfo(
-      override val id: Int,
+      override val id: Long,
+      override val updated: Instant,
       override val title: String,
       private val data: Base64String) : ProgramInfo {
 
@@ -68,7 +82,9 @@ class RoomPersistenceManager(
 @Entity(tableName = "data")
 data class RoomTableItem(
     @PrimaryKey(autoGenerate = true)
-    val id: Int?,
+    val id: Long?,
+    @ColumnInfo
+    val updated: Instant,
     @ColumnInfo
     val title: String,
     @ColumnInfo
@@ -91,40 +107,65 @@ fun serializeProgram(p: Program, factory: Base64Factory): String = p.instruction
     .encodeToBase64(factory)
 
 fun deserializeProgram(g: String, factory: Base64Factory): Program? {
-  val instructions = g.decodeFromBase64(factory)
-      .split(delimiters = ";")
-      .map {
-        val components = it.split(":")
-        val index = components[0].toInt()
-        val serialized = components[1]
-        index to Instruction.fromString(serialized)
-      }
-      .associate { it }
+  val instructions = if (g.isNotEmpty()) {
+    g.decodeFromBase64(factory)
+        .split(delimiters = ";")
+        .map {
+          val components = it.split(":")
+          val index = components[0].toInt()
+          val serialized = components[1]
+          index to Instruction.fromString(serialized)
+        }
+        .associate { it }
+
+  } else {
+    emptyMap<Int, Instruction?>()
+  }
   return Program(instructions)
 }
+
+/* Type Converters */
+
+class RoomTypeConverters {
+  @TypeConverter
+  fun toInstant(value: Long): Instant = Instant.ofEpochMilli(value)
+
+  @TypeConverter
+  fun fromInstant(instant: Instant): Long = instant.toEpochMilli()
+}
+
 
 /* DAOs */
 
 @Dao
 abstract class ProgramDao {
-  @Query("SELECT * FROM data")
-  abstract fun listAll(): Flowable<RoomTableItem>
+  @Query("SELECT * FROM data ORDER BY updated DESC")
+  abstract fun listAll(): Flowable<List<RoomTableItem>>
 
-  @Insert(onConflict = OnConflictStrategy.REPLACE)
-  abstract fun insertSync(entity: RoomTableItem): Long
+  @Insert(onConflict = OnConflictStrategy.IGNORE)
+  protected abstract fun insertSync(entity: RoomTableItem): Long
+
+  @Update(onConflict = OnConflictStrategy.IGNORE)
+  protected abstract fun updateSync(entity: RoomTableItem): Int
 
   @Query("SELECT * FROM data WHERE id = (:id)")
-  abstract fun getSync(id: Long): RoomTableItem
+  protected abstract fun getSync(id: Long): RoomTableItem
 
   @Transaction
-  open fun insertAndGetSync(entity: RoomTableItem): RoomTableItem {
-    val id = insertSync(entity)
-    return getSync(id)
+  protected open fun upsertSync(entity: RoomTableItem): RoomTableItem {
+    val idToQuery = if (entity.id != null) {
+      updateSync(entity)
+      entity.id
+    } else {
+      insertSync(entity)
+    }
+
+    return getSync(idToQuery)
   }
 
   // No idea why Room doesn't support Rx for @Insert functions, but oh well.
-  fun insert(entity: RoomTableItem): Single<RoomTableItem> =
-      Single.fromCallable { insertAndGetSync(entity) }
+  fun upsert(entity: RoomTableItem): Single<RoomTableItem> =
+      Single.fromCallable { upsertSync(entity) }
 }
 
 /* Room Database */
@@ -132,6 +173,7 @@ abstract class ProgramDao {
 @Database(
     version = 1,
     entities = arrayOf(RoomTableItem::class))
+@TypeConverters(RoomTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
   abstract fun programDao(): ProgramDao
 }
