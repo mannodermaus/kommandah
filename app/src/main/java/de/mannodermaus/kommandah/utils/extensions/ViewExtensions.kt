@@ -4,6 +4,7 @@ import android.support.annotation.ColorRes
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.annotation.StyleRes
+import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.View
@@ -45,7 +46,8 @@ internal constructor(val activity: AppCompatActivity) {
   }
 }
 
-fun AppCompatActivity.toolbar(config: ToolbarConfig.() -> Unit) {
+fun AppCompatActivity.toolbar(toolbar: Toolbar, config: ToolbarConfig.() -> Unit) {
+  setSupportActionBar(toolbar)
   config.invoke(ToolbarConfig(this))
 }
 
@@ -59,6 +61,16 @@ fun TextView.appendLine(line: CharSequence = "") = this.also {
 fun TextView.appendLine(@StringRes res: Int, vararg args: Any) = this.also {
   append(resources.getString(res, *args))
   append("\n")
+}
+
+/* DrawerLayout */
+
+fun DrawerLayout.toggleDrawer(gravity: Int) {
+  if (isDrawerOpen(gravity)) {
+    closeDrawer(gravity)
+  } else {
+    openDrawer(gravity)
+  }
 }
 
 /* ViewGroup */

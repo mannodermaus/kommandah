@@ -21,4 +21,8 @@
   <string name="main_dialog_instructionline_explanation">Leave empty to append after the last
     instruction.
   </string>
+  <string name="main_drawer_load">Load Program</string>
+  <string name="main_drawer_save">Save Program</string>
+  <string name="main_drawer_section_program">Program</string>
+  <string name="main_untitledprogram">New Program</string>
 </resources>

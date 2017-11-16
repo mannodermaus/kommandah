@@ -1,8 +1,10 @@
 package de.mannodermaus.kommandah.test.views.main
 
+import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.test.managers.runtime.InstantInterpreter
+import de.mannodermaus.kommandah.test.mocks.persistence.TestPersistenceManager
 import de.mannodermaus.kommandah.views.main.MainViewModel
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
@@ -17,7 +19,8 @@ import org.junit.jupiter.api.Test
 
 class MainViewModelTests {
 
-  lateinit var interpreter: Interpreter
+  private lateinit var interpreter: Interpreter
+  private lateinit var persistence: PersistenceManager
   lateinit var viewModel: MainViewModel
 
   companion object {
@@ -34,8 +37,10 @@ class MainViewModelTests {
 
   @BeforeEach
   fun beforeEach() {
+    // TODO Leverage DI & Test modules
     interpreter = InstantInterpreter()
-    viewModel = MainViewModel(interpreter)
+    persistence = TestPersistenceManager()
+    viewModel = MainViewModel(interpreter, persistence)
   }
 
   @Test

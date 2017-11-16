@@ -1,6 +1,7 @@
 package de.mannodermaus.kommandah.views.main
 
 import android.arch.lifecycle.ViewModel
+import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
 import de.mannodermaus.kommandah.managers.runtime.Interpreter
 import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Instruction
@@ -9,7 +10,7 @@ import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
-import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
+import de.mannodermaus.kommandah.views.main.models.ExecutionState
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
@@ -17,13 +18,15 @@ import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
 import javax.inject.Inject
 
-class MainViewModel
-@Inject constructor(private val interpreter: Interpreter) : ViewModel() {
+class MainViewModel @Inject constructor(
+    private val interpreter: Interpreter,
+    private val persistence: PersistenceManager
+) : ViewModel() {
 
   private val instructions: BehaviorSubject<OrderedMap<InstructionItem>> =
       BehaviorSubject.createDefault(OrderedMap())
-  private val executionStatus: BehaviorSubject<ExecutionStatus> =
-      BehaviorSubject.createDefault(ExecutionStatus.PAUSED)
+  private val executionState: BehaviorSubject<ExecutionState> =
+      BehaviorSubject.createDefault(ExecutionState(running = false, programTitle = null))
   private val consoleMessages: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
   private val subscriptions: CompositeDisposable = CompositeDisposable()
@@ -47,7 +50,7 @@ class MainViewModel
   /**
    * Stream of changes to the Program's execution status, either "Executing" or "Paused".
    */
-  fun executionStatus(): Observable<ExecutionStatus> = executionStatus
+  fun executionState(): Observable<ExecutionState> = executionState
 
   /**
    * Stream of messages to print to a Console.
@@ -72,7 +75,7 @@ class MainViewModel
         .doOnSubscribe {
           // Update the execution status
           clearInstructionState()
-          executionStatus.onNext(ExecutionStatus.RUNNING)
+          executionState.onNext(executionState.value.copy(running = true))
           consoleMessages.onNext(ConsoleEvent.Clear)
         }
         .doOnNext {
@@ -93,7 +96,7 @@ class MainViewModel
         }
         .doOnTerminate {
           // Reset the execution status
-          executionStatus.onNext(ExecutionStatus.PAUSED)
+          executionState.onNext(executionState.value.copy(running = false))
         }
         .subscribe()
   }

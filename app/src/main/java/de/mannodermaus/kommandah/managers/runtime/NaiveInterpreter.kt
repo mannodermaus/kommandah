@@ -1,7 +1,5 @@
 package de.mannodermaus.kommandah.managers.runtime
 
-import dagger.Module
-import dagger.Provides
 import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramOutput
@@ -9,17 +7,8 @@ import io.reactivex.Flowable
 import io.reactivex.rxkotlin.toFlowable
 import io.reactivex.rxkotlin.zipWith
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 
-@Module
-class RuntimeModule {
-
-  @Singleton
-  @Provides
-  fun interpreter(): Interpreter = NaiveInterpreter()
-}
-
-private class NaiveInterpreter : Interpreter {
+class NaiveInterpreter : Interpreter {
   override fun execute(program: Program, env: ExecutionEnvironment): Flowable<ProgramOutput> =
       program.run().toFlowable()
           // Throttle each item using the ExecutionEnvironment

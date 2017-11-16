@@ -13,11 +13,11 @@ import de.mannodermaus.kommandah.utils.ItemTouchHelperAware
 import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
-import kotlinx.android.synthetic.main.list_item_instruction.view.*
+import kotlinx.android.synthetic.main.main_instruction_item.view.*
 
 /* Constants */
 
-private val itemLayoutResource = R.layout.list_item_instruction
+private val itemLayoutResource = R.layout.main_instruction_item
 private val shakeAnimationValues = floatArrayOf(50f, -50f, 25f, -25f, 12f, -12f, 6f, -6f, 0f)
 
 /* Adapter */

@@ -1,5 +1,6 @@
 <resources>
   <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <item name="windowNoTitle">true</item>
     <item name="colorPrimary">@color/primary</item>
     <item name="colorPrimaryDark">@color/primary_dark</item>
     <item name="colorAccent">@color/accent</item>
@@ -21,6 +22,11 @@
 
   <style name="TextAppearance.Kommandah.ListItemBig">
     <item name="android:textSize">@dimen/text_large</item>
+  </style>
+
+  <style name="TextAppearance.Kommandah.DrawerHeaderTitle">
+    <item name="android:textSize">@dimen/text_large</item>
+    <item name="android:textColor">@color/text_drawer_header</item>
   </style>
 
   <style name="TextAppearance.Kommandah.ConsoleOutput">
@@ -55,4 +61,5 @@
     <item name="android:layout_width">24dp</item>
     <item name="android:layout_height">24dp</item>
   </style>
+  <color name="text_drawer_header">#ffffff</color>
 </resources>

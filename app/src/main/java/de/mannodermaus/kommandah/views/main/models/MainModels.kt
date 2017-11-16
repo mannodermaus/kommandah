@@ -20,7 +20,11 @@ data class InstructionItem(val instruction: Instruction, val state: State = Stat
 /**
  * Different states that the execution of a Program can be in.
  */
-enum class ExecutionStatus { PAUSED, RUNNING }
+data class ExecutionState(
+    /** Whether or not the current program is being executed */
+    val running: Boolean,
+    /** The title of the currently loaded Program, if any */
+    val programTitle: String?)
 
 /**
  * The different kinds of events piped through to a Console window.

@@ -4,11 +4,13 @@ import android.arch.lifecycle.ViewModelProvider
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.v4.app.Fragment
+import android.support.v4.view.GravityCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.View
+import android.widget.TextView
 import com.jakewharton.rxbinding2.view.clicks
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -18,10 +20,9 @@ import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
 import de.mannodermaus.kommandah.utils.extensions.setVisibleIf
-import de.mannodermaus.kommandah.utils.extensions.toolbar
+import de.mannodermaus.kommandah.utils.extensions.toggleDrawer
 import de.mannodermaus.kommandah.utils.extensions.viewModel
 import de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior
-import de.mannodermaus.kommandah.views.main.models.ExecutionStatus
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
 import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
 import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
@@ -31,6 +32,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_bottomtoolbar.*
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -56,6 +58,13 @@ class MainActivity : AppCompatActivity(),
   private val bottomToolbarBehavior by lazy { StickToBottomSheetBehavior.from(toolbarBottom) }
   private val console by lazy { ConsoleWindow(tvConsoleWindow) }
 
+  /* Navigation Drawer */
+  private val tvDrawerHeaderProgram by lazy {
+    // Requires lazy lookup from the NavigationView,
+    // kotlin-android-extensions won't work here
+    navigation.getHeaderView(0).findViewById<TextView>(R.id.tvDrawerHeaderProgram)
+  }
+
   /* Other */
   private val disposables: CompositeDisposable = CompositeDisposable()
 
@@ -67,13 +76,6 @@ class MainActivity : AppCompatActivity(),
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.main_activity)
-
-    // Setup UI
-    toolbar {
-      showHome(true)
-      setHomeIcon(R.drawable.ic_menu, tint = R.color.text_logo)
-      setTitleTextAppearance(R.style.TextAppearance_Kommandah_Logo)
-    }
 
     // Setup RecyclerView
     rvInstructions.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
@@ -91,7 +93,7 @@ class MainActivity : AppCompatActivity(),
   override fun onStart() {
     super.onStart()
 
-    // Connect to ViewModel
+    setupDrawer()
     setupListAdapter()
     setupExecutionButton()
     setupAddButton()
@@ -106,7 +108,7 @@ class MainActivity : AppCompatActivity(),
     disposables.clear()
   }
 
-  /* List Item Interactions */
+  /* Interactions */
 
   override fun handleListItemClick(holder: RecyclerView.ViewHolder, item: InstructionItem?) {
     item?.let {
@@ -147,6 +149,30 @@ class MainActivity : AppCompatActivity(),
 
   /* Private */
 
+  private fun setupDrawer() {
+    // Connect to ViewModel
+    disposables += viewModel.executionState().subscribe {
+      // kotlin-android-extensions won't work here
+      tvDrawerHeaderProgram.text = it.programTitle ?: getString(R.string.main_untitledprogram)
+    }
+
+    // Click listeners
+    buttonDrawer.setOnClickListener { drawer.toggleDrawer(GravityCompat.START) }
+    navigation.setNavigationItemSelectedListener {
+      when (it.itemId) {
+        R.id.actionLoadProgram -> {
+          Timber.w("Load Programs")
+          true
+        }
+        R.id.actionSaveProgram -> {
+          Timber.w("Save Program")
+          true
+        }
+        else -> false
+      }
+    }
+  }
+
   private fun setupListAdapter() {
     // Keep list of instructions up-to-date
     disposables += viewModel.instructions().subscribe { listAdapter.update(it) }
@@ -162,16 +188,15 @@ class MainActivity : AppCompatActivity(),
     }
 
     // Icon Change Events
-    disposables += viewModel.executionStatus().subscribe { status ->
-      when (status) {
-        ExecutionStatus.PAUSED -> buttonExecute.setImageResource(R.drawable.bt_play)
-        ExecutionStatus.RUNNING -> {
-          buttonExecute.setImageResource(R.drawable.ic_pause)
+    disposables += viewModel.executionState().subscribe { status ->
+      if (status.running) {
+        buttonExecute.setImageResource(R.drawable.ic_pause)
 
-          // Show the console window if it isn't showing already
-          bottomToolbarBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-        }
-        else -> throw IllegalArgumentException("Unexpected ExecutionStatus '$status'")
+        // Show the console window if it isn't showing already
+        bottomToolbarBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+      } else {
+        buttonExecute.setImageResource(R.drawable.bt_play)
       }
     }
   }
@@ -212,8 +237,7 @@ class MainActivity : AppCompatActivity(),
   private fun setupConsoleWindow() {
     // Connect to the ViewModel
     disposables += viewModel.consoleMessages().subscribe { console.handle(it) }
-    disposables += viewModel.executionStatus()
-        .map { it == ExecutionStatus.RUNNING }
-        .subscribe { isRunning -> progressBar.setVisibleIf(isRunning) }
+    disposables += viewModel.executionState()
+        .subscribe { progressBar.setVisibleIf(it.running) }
   }
 }

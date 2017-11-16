@@ -14,4 +14,5 @@
   <dimen name="main_consolewindow_padding">4dp</dimen>
   <dimen name="main_instruction_status_width">8dp</dimen>
   <dimen name="main_instruction_status_corner">4dp</dimen>
+  <dimen name="main_drawer_header_height">192dp</dimen>
 </resources>
