@@ -20,24 +20,12 @@ import javax.inject.Inject
 class MainViewModel
 @Inject constructor(private val interpreter: Interpreter) : ViewModel() {
 
-  /**
-   * Stream of events related to the Instructions that make up the current Program
-   */
   private val instructions: BehaviorSubject<OrderedMap<InstructionItem>> =
       BehaviorSubject.createDefault(OrderedMap())
-
-  /**
-   * Stream of events related to the current execution status of the current Program
-   */
   private val executionStatus: BehaviorSubject<ExecutionStatus> =
       BehaviorSubject.createDefault(ExecutionStatus.PAUSED)
-
-  /**
-   * Stream of events related to handling console messages during execution
-   */
   private val consoleMessages: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
-
   private val subscriptions: CompositeDisposable = CompositeDisposable()
 
   /* Lifecycle */
@@ -49,18 +37,32 @@ class MainViewModel
 
   /* Streams; doubled from properties to hide BehaviorSubjects from consumers */
 
+  /**
+   * Stream of changes to the List of Instructions that make up the current Program.
+   * Note that the List contains null values on "absent"/"empty" items.
+   */
   fun instructions(): Observable<List<InstructionItem?>> =
-      instructions.map { it.nullPaddedValues() }
+      instructions.map { it.nullPaddedValues }
 
+  /**
+   * Stream of changes to the Program's execution status, either "Executing" or "Paused".
+   */
   fun executionStatus(): Observable<ExecutionStatus> = executionStatus
 
+  /**
+   * Stream of messages to print to a Console.
+   */
   fun consoleMessages(): Observable<ConsoleEvent> = consoleMessages
 
   /* Interactions */
 
+  /**
+   * Using the current List of Instructions, execute the Program
+   * and notify subscribers of the other stream-based functions along the way.
+   */
   fun runProgram() {
     // Compile the instructions into a Program
-    val program = Program(instructions.value.nullPaddedValues()
+    val program = Program(instructions.value.nullPaddedValues
         .withIndex()
         .associate { it.index to it.value?.instruction })
 
@@ -129,9 +131,7 @@ class MainViewModel
    * then fires a notification to subscribers of the data.
    */
   fun swapInstructions(fromPosition: Int, toPosition: Int) {
-    updateItemsInternal {
-      it.swap(fromPosition, toPosition)
-    }
+    updateItemsInternal { it.swap(fromPosition, toPosition) }
   }
 
   /**
@@ -142,6 +142,9 @@ class MainViewModel
     updateItemsInternal { it.remove(position) }
   }
 
+  /**
+   * Checks whether or not there is an Instruction placed at the given position.
+   */
   fun hasInstructionAt(position: Int): Boolean = instructions.value.containsKey(position)
 
   /* Private */

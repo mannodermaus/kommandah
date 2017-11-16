@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity(),
   override fun supportFragmentInjector(): AndroidInjector<Fragment> =
       injector
 
+  /* Lifecycle */
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.main_activity)
@@ -117,6 +119,30 @@ class MainActivity : AppCompatActivity(),
 
   override fun startListItemDrag(holder: RecyclerView.ViewHolder) {
     itemTouchHelper.startDrag(holder)
+  }
+
+  /**
+   * Implementor of list item interactions (drag-and-drop & swipe-to-dismiss)
+   */
+  private inner class ListItemTouchCallback : ItemTouchHelper.SimpleCallback(
+      ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+      ItemTouchHelper.START or ItemTouchHelper.END) {
+
+    override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+      viewModel.swapInstructions(source.adapterPosition, target.adapterPosition)
+      return true
+    }
+
+    override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
+        if (viewModel.hasInstructionAt(viewHolder.adapterPosition)) {
+          super.getSwipeDirs(recyclerView, viewHolder)
+        } else {
+          0
+        }
+
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+      viewModel.removeInstruction(viewHolder.adapterPosition)
+    }
   }
 
   /* Private */
@@ -189,29 +215,5 @@ class MainActivity : AppCompatActivity(),
     disposables += viewModel.executionStatus()
         .map { it == ExecutionStatus.RUNNING }
         .subscribe { isRunning -> progressBar.setVisibleIf(isRunning) }
-  }
-
-  /**
-   * Implementor of list item interactions (drag-and-drop & swipe-to-dismiss)
-   */
-  private inner class ListItemTouchCallback : ItemTouchHelper.SimpleCallback(
-      ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-      ItemTouchHelper.START or ItemTouchHelper.END) {
-
-    override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-      viewModel.swapInstructions(source.adapterPosition, target.adapterPosition)
-      return true
-    }
-
-    override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int =
-        if (viewModel.hasInstructionAt(viewHolder.adapterPosition)) {
-          ItemTouchHelper.START or ItemTouchHelper.END
-        } else {
-          0
-        }
-
-    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-      viewModel.removeInstruction(viewHolder.adapterPosition)
-    }
   }
 }

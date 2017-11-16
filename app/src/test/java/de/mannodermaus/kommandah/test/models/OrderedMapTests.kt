@@ -115,7 +115,7 @@ class OrderedMapTests {
     map.put(0, "First")
     map.put(1, "Second")
     map.put(3, "Third")
-    val values = map.nullPaddedValues()
+    val values = map.nullPaddedValues
 
     assertThat(values).containsExactly(
         "First",
