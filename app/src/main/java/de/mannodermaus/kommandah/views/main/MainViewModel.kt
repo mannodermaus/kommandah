@@ -13,11 +13,13 @@ import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.ExecutionState
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
+import de.mannodermaus.kommandah.views.main.models.ProgramEvent
 import de.mannodermaus.kommandah.views.main.models.ProgramState
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import javax.inject.Inject
 
 class MainViewModel @Inject constructor(
@@ -27,6 +29,8 @@ class MainViewModel @Inject constructor(
 
   private val programStateChanges: BehaviorSubject<ProgramState> =
       BehaviorSubject.createDefault(ProgramState())
+  private val programEventsStream: PublishSubject<ProgramEvent> =
+      PublishSubject.create()
   private val consoleMessagesStream: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
   private val subscriptions: CompositeDisposable = CompositeDisposable()
@@ -58,6 +62,11 @@ class MainViewModel @Inject constructor(
           .async()
 
   /**
+   * Stream of events related to loading & saving Program information
+   */
+  fun programEvents(): Observable<ProgramEvent> = programEventsStream.async()
+
+  /**
    * Stream of messages to print to a Console.
    */
   fun consoleMessages(): Observable<ConsoleEvent> = consoleMessagesStream.async()
@@ -68,6 +77,14 @@ class MainViewModel @Inject constructor(
    * Obtains the list of saved Programs asynchronously.
    */
   fun listRecentPrograms(count: Int) = persistence.listRecentPrograms(count).async()
+
+  /**
+   * Starts a new, blank Program.
+   */
+  fun newProgram() {
+    updateProgramState { ProgramState() }
+    notifyProgramEvent(ProgramEvent.New)
+  }
 
   /**
    * Loads the given Program into the ViewModel.
@@ -89,6 +106,7 @@ class MainViewModel @Inject constructor(
                 title = info.title,
                 instructions = mappedInstructions)
           }
+          notifyProgramEvent(ProgramEvent.Loaded(info.title))
         }
   }
 
@@ -107,17 +125,16 @@ class MainViewModel @Inject constructor(
         program = compileInstructions(),
         id = currentProgramState.savedId,
         title = currentProgramState.title)
-        .doOnSuccess { result ->
+        .async()
+        .subscribe { result ->
           updateProgramState {
             // Store the persistence identifiers locally as well
             it.copy(
                 savedId = result.id,
                 title = result.title)
           }
+          notifyProgramEvent(ProgramEvent.Saved(result.title))
         }
-        .toCompletable()
-        .async()
-        .subscribe()
   }
 
   /**
@@ -252,6 +269,10 @@ class MainViewModel @Inject constructor(
     val currentState = programStateChanges.value
     val newState = function.invoke(currentState)
     programStateChanges.onNext(newState)
+  }
+
+  private fun notifyProgramEvent(event: ProgramEvent) {
+    programEventsStream.onNext(event)
   }
 
   /**

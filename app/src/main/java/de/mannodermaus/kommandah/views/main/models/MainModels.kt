@@ -48,3 +48,20 @@ sealed class ConsoleEvent {
   data class Error(val cause: ProgramException, val instruction: Instruction?) : ConsoleEvent()
   object Finished : ConsoleEvent()
 }
+
+sealed class ProgramEvent {
+  /**
+   * A new, empty Program is started
+   */
+  object New : ProgramEvent()
+
+  /**
+   * The Program with the given title was loaded
+   */
+  class Loaded(val title: String): ProgramEvent()
+
+  /**
+   * The Program with the given title was saved
+   */
+  class Saved(val title: String): ProgramEvent()
+}

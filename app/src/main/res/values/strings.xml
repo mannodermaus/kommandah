@@ -1,6 +1,6 @@
 <resources>
   <string name="app_name">kommandah</string>
-
+  <string name="format_datetime">MMM d, HH:mm</string>
   <string name="composite_bottom_sheet_behavior" translatable="false">de.mannodermaus.kommandah.utils.widgets.CompositeBottomSheetBehavior</string>
   <string name="stick_to_bottom_sheet_behavior" translatable="false">de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior</string>
 
@@ -10,23 +10,30 @@
   <string name="main_console_log">&gt; PRINT (L%1$d): %2$s</string>
   <string name="main_console_error">ERROR during Execution:</string>
   <string name="main_console_default">Run your Program to see some results here…</string>
-  <string name="main_dialog_instructionchooser_title">Insert Instruction</string>
+  <string name="main_untitledprogram">Untitled Program</string>
+
   <string name="main_cd_execute">Execute your Program</string>
   <string name="main_cd_add">Add an Instruction</string>
   <string name="main_cd_expand">Show/Hide the Console</string>
+
   <string name="main_dialog_ok">Create</string>
   <string name="main_dialog_cancel">Cancel</string>
+  <string name="main_dialog_instructionchooser_title">Insert Instruction</string>
   <string name="main_dialog_inputrequired">Required field</string>
   <string name="main_dialog_instructionline">Line</string>
-  <string name="main_dialog_instructionline_explanation">Leave empty to append after the last
-    instruction.
-  </string>
+  <string name="main_dialog_instructionline_explanation">Leave empty to append after the last instruction.</string>
+  <string name="main_dialog_editprogram_title">Name your Program</string>
+  <string name="main_dialog_editprogram_hint">Title</string>
+
   <string name="main_drawer_load">Load Program</string>
   <string name="main_drawer_save">Save Program</string>
   <string name="main_drawer_section_currentprogram">Current Program</string>
-  <string name="main_untitledprogram">Untitled Program</string>
   <string name="main_drawer_section_recentprograms">Recently Opened</string>
-  <string name="format_datetime">MMM d, HH:mm</string>
-  <string name="main_dialog_editprogram_title">Name your Program</string>
-  <string name="main_dialog_editprogram_hint">Title</string>
+  <string name="main_drawer_new">New Program</string>
+
+  <string name="main_toast_newprogram">Starting new Program…</string>
+  <string name="main_toast_loadedprogram">Loaded \'%s\'!</string>
+  <string name="main_toast_savedprogram">Saved as \'%s\'.</string>
+  <string name="main_emptylist">This Program is empty!\nClick the center button on the bottom to get started with your first instructions.
+  </string>
 </resources>

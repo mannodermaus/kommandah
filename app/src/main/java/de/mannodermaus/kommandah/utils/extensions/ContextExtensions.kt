@@ -1,6 +1,7 @@
 package de.mannodermaus.kommandah.utils.extensions
 
 import android.content.Context
+import android.widget.Toast
 import com.afollestad.materialdialogs.MaterialDialog
 import de.mannodermaus.kommandah.R
 
@@ -15,4 +16,8 @@ inline fun Context.showDialog(config: MaterialDialog.Builder.() -> Unit): Materi
   }
   config.invoke(builder)
   return builder.show()
+}
+
+fun Context.longToast(message: CharSequence) {
+  Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 }

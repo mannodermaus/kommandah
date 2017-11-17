@@ -21,11 +21,13 @@ import de.mannodermaus.kommandah.utils.ListItemClickListener
 import de.mannodermaus.kommandah.utils.ListItemDragListener
 import de.mannodermaus.kommandah.utils.di.HasViewModelProviderFactory
 import de.mannodermaus.kommandah.utils.extensions.format
+import de.mannodermaus.kommandah.utils.extensions.longToast
 import de.mannodermaus.kommandah.utils.extensions.setVisibleIf
 import de.mannodermaus.kommandah.utils.extensions.toggleDrawer
 import de.mannodermaus.kommandah.utils.extensions.viewModel
 import de.mannodermaus.kommandah.utils.widgets.StickToBottomSheetBehavior
 import de.mannodermaus.kommandah.views.main.models.InstructionItem
+import de.mannodermaus.kommandah.views.main.models.ProgramEvent
 import de.mannodermaus.kommandah.views.main.ui.ConsoleWindow
 import de.mannodermaus.kommandah.views.main.ui.InstructionAdapter
 import de.mannodermaus.kommandah.views.main.ui.showCreateInstructionDialog
@@ -35,11 +37,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import kotlinx.android.synthetic.main.main_activity.*
 import kotlinx.android.synthetic.main.main_bottomtoolbar.*
-import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import javax.inject.Inject
 
-private const val NUM_RECENT_PROGRAMS = 3
+private const val NUM_RECENT_PROGRAMS = 16
 
 /**
  * The main screen of the application.
@@ -106,6 +107,7 @@ class MainActivity : AppCompatActivity(),
     setupAddButton()
     setupExpandButton()
     setupConsoleWindow()
+    setupToasts()
   }
 
   override fun onStop() {
@@ -167,6 +169,7 @@ class MainActivity : AppCompatActivity(),
       }
     }
 
+    // Dynamically update the list of recently opened Programs
     disposables += viewModel.listRecentPrograms(NUM_RECENT_PROGRAMS)
         .subscribe { savedPrograms ->
           // Dynamically update the list of recently opened Programs
@@ -192,6 +195,10 @@ class MainActivity : AppCompatActivity(),
     buttonDrawer.setOnClickListener { drawer.toggleDrawer(GravityCompat.START) }
     navigation.setNavigationItemSelectedListener {
       when (it.itemId) {
+        R.id.actionNewProgram -> {
+          viewModel.newProgram()
+          true
+        }
         R.id.actionSaveProgram -> {
           viewModel.saveProgram()
           true
@@ -203,7 +210,11 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupListAdapter() {
     // Keep list of instructions up-to-date
-    disposables += viewModel.instructions().subscribe { listAdapter.update(it) }
+    disposables += viewModel.instructions().subscribe {
+      listAdapter.update(it)
+      tvEmptyList.setVisibleIf(it.isEmpty())
+      rvInstructions.setVisibleIf(it.isNotEmpty())
+    }
   }
 
   private fun setupExecutionButton() {
@@ -267,5 +278,18 @@ class MainActivity : AppCompatActivity(),
     disposables += viewModel.consoleMessages().subscribe { console.handle(it) }
     disposables += viewModel.executionState()
         .subscribe { progressBar.setVisibleIf(it.running) }
+  }
+
+  private fun setupToasts() {
+    // Connect to the ViewModel
+    disposables += viewModel.programEvents().subscribe {
+      val message = when (it) {
+        ProgramEvent.New -> getString(R.string.main_toast_newprogram)
+        is ProgramEvent.Loaded -> getString(R.string.main_toast_loadedprogram, it.title)
+        is ProgramEvent.Saved -> getString(R.string.main_toast_savedprogram, it.title)
+      }
+
+      longToast(message)
+    }
   }
 }
