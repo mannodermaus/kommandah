@@ -8,5 +8,6 @@ class TestApp : App() {
   override fun createComponent(): AppComponent =
       DaggerTestAppComponent.builder()
           .appModule(AppModule(this))
+          .buildTypeComponent(DaggerTestBuildTypeComponent.create())
           .build()
 }

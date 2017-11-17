@@ -6,13 +6,12 @@ import dagger.android.support.AndroidSupportInjectionModule
 import de.mannodermaus.kommandah.AppComponent
 import de.mannodermaus.kommandah.AppModule
 import de.mannodermaus.kommandah.BuildTypeComponent
-import de.mannodermaus.kommandah.managers.logging.DebugLoggingModule
 import de.mannodermaus.kommandah.managers.runtime.RuntimeModule
 import de.mannodermaus.kommandah.managers.time.TimeModule
 import de.mannodermaus.kommandah.managers.viewmodel.ViewModelModule
 import de.mannodermaus.kommandah.test.mocks.logging.TestLoggingModule
 import de.mannodermaus.kommandah.test.mocks.persistence.TestPersistenceModule
-import de.mannodermaus.kommandah.test.utils.InjectExtension
+import de.mannodermaus.kommandah.test.utils.junit5.InjectExtension
 import javax.inject.Singleton
 
 @Singleton

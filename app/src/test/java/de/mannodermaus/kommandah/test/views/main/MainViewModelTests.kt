@@ -1,10 +1,11 @@
 package de.mannodermaus.kommandah.test.views.main
 
-import de.mannodermaus.kommandah.managers.runtime.Interpreter
+import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
 import de.mannodermaus.kommandah.models.Instruction
-import de.mannodermaus.kommandah.test.managers.runtime.InstantInterpreter
 import de.mannodermaus.kommandah.test.mocks.persistence.TestPersistenceManager
 import de.mannodermaus.kommandah.test.utils.extensions.assertLatestValue
+import de.mannodermaus.kommandah.test.utils.junit5.InjectExtension
+import de.mannodermaus.kommandah.test.utils.junit5.Injected
 import de.mannodermaus.kommandah.views.main.MainViewModel
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
 import de.mannodermaus.kommandah.views.main.models.ExecutionState
@@ -18,36 +19,27 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.threeten.bp.Clock
-import org.threeten.bp.Instant
-import org.threeten.bp.ZoneId
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(InjectExtension::class)
 class MainViewModelTests {
 
-  private lateinit var interpreter: Interpreter
-  private lateinit var clock: Clock
-  private lateinit var persistence: TestPersistenceManager
-  private lateinit var viewModel: MainViewModel
+  lateinit var viewModel: MainViewModel
 
   companion object {
     @BeforeAll
     @JvmStatic
     @Suppress("unused")
     fun beforeClass() {
-      // Override RxAndroid's default main thread scheduler
-      // FIXME In a non-time-constrained environment, use DI to provide test schedulers
+      // Override default thread schedulers for Rx computations
       RxJavaPlugins.setComputationSchedulerHandler { Schedulers.trampoline() }
       RxAndroidPlugins.setInitMainThreadSchedulerHandler { Schedulers.trampoline() }
     }
   }
 
   @BeforeEach
-  fun beforeEach() {
-    // TODO Leverage DI & Test modules
-    interpreter = InstantInterpreter()
-    clock = Clock.fixed(Instant.ofEpochMilli(0), ZoneId.of("UTC"))
-    persistence = TestPersistenceManager(clock)
-    viewModel = MainViewModel(interpreter, persistence)
+  fun beforeEach(@Injected viewModel: MainViewModel) {
+    this.viewModel = viewModel
   }
 
   @Test
@@ -164,7 +156,7 @@ class MainViewModelTests {
 
   @Test
   @DisplayName("Save Program: Works as expected")
-  fun saveProgramWorksAsExpected() {
+  fun saveProgramWorksAsExpected(@Injected persistenceManager: PersistenceManager) {
     val executionStateObserver = TestObserver<ExecutionState>()
     viewModel.executionState().subscribe(executionStateObserver)
 
@@ -174,6 +166,6 @@ class MainViewModelTests {
 
     // Assert
     executionStateObserver.assertLatestValue { it.programTitle == "My Program" }
-    assertThat(persistence.infos.value).hasSize(1)
+    assertThat((persistenceManager as TestPersistenceManager).infos.value).hasSize(1)
   }
 }
