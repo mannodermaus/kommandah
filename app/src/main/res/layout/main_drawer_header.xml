@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/main_drawer_header_height"
-    android:background="@color/primary"
-    android:padding="16dp">
+    android:layout_height="@dimen/main_drawer_header_height">
+
+  <ImageView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      app:srcCompat="@drawable/bg_gears"
+      android:scaleType="centerCrop"
+      android:tint="@color/primary"
+      android:tintMode="multiply"/>
 
   <TextView
       android:id="@+id/tvDrawerHeaderProgram"
@@ -13,6 +20,7 @@
       android:layout_height="wrap_content"
       android:layout_gravity="start|bottom"
       android:drawableEnd="@drawable/ic_pencil"
+      android:layout_margin="16dp"
       android:drawablePadding="8dp"
       android:text="@string/main_untitledprogram"/>
 </FrameLayout>

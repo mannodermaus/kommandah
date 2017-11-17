@@ -7,6 +7,11 @@
     <menu>
 
       <item
+          android:id="@+id/actionNewProgram"
+          android:icon="@drawable/ic_file"
+          android:title="@string/main_drawer_new"/>
+
+      <item
           android:id="@+id/actionSaveProgram"
           android:icon="@drawable/ic_briefcase_download"
           android:title="@string/main_drawer_save"/>
