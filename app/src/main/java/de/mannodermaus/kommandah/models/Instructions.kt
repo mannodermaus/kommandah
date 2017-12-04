@@ -40,6 +40,11 @@ sealed class Instruction(protected val operator: String) {
   object Mult : Instruction(operator = "MULT")
 
   /**
+   * Pop two arguments, add them & push result
+   */
+  object Add : Instruction(operator = "ADD")
+
+  /**
    * Pop one argument from the stack, print it out
    */
   object Print : Instruction(operator = "PRINT")
@@ -144,6 +149,7 @@ private val instructionsMetadata: BiMap<String, InstructionMeta> =
             creator = { Instruction.Call(it[0] as Int) }),
 
         "MULT" to InstructionMeta { Instruction.Mult },
+        "ADD" to InstructionMeta { Instruction.Add },
         "PRINT" to InstructionMeta { Instruction.Print },
 
         "PUSH" to InstructionMeta(

@@ -1,11 +1,13 @@
 package de.mannodermaus.kommandah.test.models
 
+import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.Instruction.Call
 import de.mannodermaus.kommandah.models.Instruction.Mult
 import de.mannodermaus.kommandah.models.Instruction.Print
 import de.mannodermaus.kommandah.models.Instruction.Push
 import de.mannodermaus.kommandah.models.Instruction.Return
 import de.mannodermaus.kommandah.models.Instruction.Stop
+import de.mannodermaus.kommandah.models.NoSuchInstructionError
 import de.mannodermaus.kommandah.models.Program
 import de.mannodermaus.kommandah.models.ProgramException
 import de.mannodermaus.kommandah.models.ProgramOutput
@@ -127,6 +129,36 @@ class ProgramTests {
 
     wrongProgram.runBlocking()
     wrongProgram.assertExecutionFailedWith<ProgramException.MissingStopInstruction>("Illegal Access on L3: Did you forget to put a Stop instruction at the end?")
+  }
+}
+
+@DisplayName("Instruction: ADD")
+class AddInstructionTests {
+
+  private fun createProgramWith(stack: Stack<Int>) =
+      Program(instructions = mapOf(0 to Instruction.Add, 1 to Stop), stack = stack)
+
+  @Test
+  fun addWorksWithEnoughArguments() {
+    val stack = stackOf(10, 25)
+    val program = createProgramWith(stack)
+
+    val results = program.runBlocking()
+    assertThat(results)
+        .containsOnly(
+            ProgramOutput.Started(2),
+            ProgramOutput.Step(instruction = Instruction.Add, line = 0),
+            ProgramOutput.Completed)
+
+    assertThat(stack).hasSize(1).containsOnly(35)
+  }
+
+  @Test
+  fun throwsIfNothingOnTheStack() {
+    val program = createProgramWith(stackOf())
+
+    program.runBlocking()
+    program.assertExecutionFailedWith<ProgramException.IllegalStackAccess>()
   }
 }
 

@@ -117,6 +117,14 @@ data class Program(
         }
 
         when (instruction) {
+          is Instruction.Add -> {
+            // "Add two args" TODO Docs
+            val value1 = stack.pop()
+            val value2 = stack.pop()
+            stack.push(value1 + value2)
+            return ProgramOutput.Step(instruction, index)
+          }
+
           is Instruction.Mult -> {
             // "Pop two values from the stack, multiply them, push the result back"
             val value1 = stack.pop()
