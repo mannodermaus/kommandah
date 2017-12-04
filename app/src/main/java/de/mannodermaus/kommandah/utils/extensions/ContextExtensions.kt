@@ -14,7 +14,7 @@ inline fun Context.showDialog(config: MaterialDialog.Builder.() -> Unit): Materi
     positiveColorRes(R.color.primary)
     negativeColorRes(R.color.accent)
   }
-  config.invoke(builder)
+  config(builder)
   return builder.show()
 }
 

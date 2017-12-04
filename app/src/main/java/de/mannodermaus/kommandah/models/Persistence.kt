@@ -3,7 +3,7 @@ package de.mannodermaus.kommandah.models
 import io.reactivex.Single
 import org.threeten.bp.Instant
 
-interface ProgramInfo {
+interface PersistedProgram {
   val id: Long
   val updated: Instant
   val title: String

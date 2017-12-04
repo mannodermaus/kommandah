@@ -48,7 +48,7 @@ internal constructor(val activity: AppCompatActivity) {
 
 fun AppCompatActivity.toolbar(toolbar: Toolbar, config: ToolbarConfig.() -> Unit) {
   setSupportActionBar(toolbar)
-  config.invoke(ToolbarConfig(this))
+  config(ToolbarConfig(this))
 }
 
 /* TextView */

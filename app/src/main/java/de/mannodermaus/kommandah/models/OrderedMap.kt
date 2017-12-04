@@ -93,7 +93,7 @@ class OrderedMap<T>() : LinkedHashMap<Int, T>() {
    * Applies the provided function to each present item in the Map.
    */
   fun forEachIndexed(func: (Int, T) -> Unit) {
-    entries.forEach { func.invoke(it.key, it.value) }
+    entries.forEach { func(it.key, it.value) }
   }
 
   /* Operators */

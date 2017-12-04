@@ -11,25 +11,24 @@ import de.mannodermaus.kommandah.views.main.di.MainActivityModule
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = arrayOf(
-    // Contributed by dagger-android
-    AndroidInjectionModule::class,
-    AndroidSupportInjectionModule::class,
+@Component(modules = [
+  // Contributed by dagger-android
+  AndroidInjectionModule::class,
+  AndroidSupportInjectionModule::class,
 
-    // Global modules
-    AppModule::class,
-    TimeModule::class,
-    RuntimeModule::class,
-    PersistenceModule::class,
-    ViewModelModule::class,
+  // Global modules
+  AppModule::class,
+  TimeModule::class,
+  RuntimeModule::class,
+  PersistenceModule::class,
+  ViewModelModule::class,
 
-    // Screen-specific
-    MainActivityModule::class
-
-), dependencies = arrayOf(
-    // Build Type-specific
-    BuildTypeComponent::class
-))
+  // Screen-specific
+  MainActivityModule::class
+], dependencies = [
+  // Build Type-specific
+  BuildTypeComponent::class
+])
 interface AppComponent {
   fun inject(app: App)
 }

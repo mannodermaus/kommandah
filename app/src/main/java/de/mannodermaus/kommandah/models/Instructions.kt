@@ -7,8 +7,6 @@ import io.michaelrocks.bimap.BiMap
 
 /**
  * Correlation between a set of instructions and their "memory address", i.e. index in a program.
- *
- * TODO This typealias will eventually be replaced by a List-like interface which allows
  * easier insertions etc.
  */
 typealias Instructions = Map<Int, Instruction?>
@@ -133,7 +131,7 @@ data class InstructionMeta(
    * Note: For Instructions without parameters, this
    * will always return the singleton instance of that Instruction.
    */
-  fun createInstruction(vararg args: Any? = emptyArray()) = creator.invoke(args)
+  fun createInstruction(vararg args: Any? = emptyArray()) = creator(args)
 }
 
 /**

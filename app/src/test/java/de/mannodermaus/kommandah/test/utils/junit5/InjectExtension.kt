@@ -62,7 +62,7 @@ class InjectExtension : BeforeEachCallback, ParameterResolver {
   @Suppress("UNCHECKED_CAST")
   private inline fun <reified T : Any> ifSubtype(cls: Class<*>, creator: (Class<T>) -> T): T? {
     return if (T::class.java.isAssignableFrom(cls)) {
-      creator.invoke(cls as Class<T>)
+      creator(cls as Class<T>)
     } else {
       null
     }

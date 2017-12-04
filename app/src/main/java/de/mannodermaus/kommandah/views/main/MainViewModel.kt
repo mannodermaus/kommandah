@@ -7,7 +7,7 @@ import de.mannodermaus.kommandah.models.ExecutionEnvironment
 import de.mannodermaus.kommandah.models.Instruction
 import de.mannodermaus.kommandah.models.OrderedMap
 import de.mannodermaus.kommandah.models.Program
-import de.mannodermaus.kommandah.models.ProgramInfo
+import de.mannodermaus.kommandah.models.PersistedProgram
 import de.mannodermaus.kommandah.models.ProgramOutput
 import de.mannodermaus.kommandah.utils.extensions.async
 import de.mannodermaus.kommandah.views.main.models.ConsoleEvent
@@ -17,6 +17,8 @@ import de.mannodermaus.kommandah.views.main.models.ProgramEvent
 import de.mannodermaus.kommandah.views.main.models.ProgramState
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.Disposables
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
@@ -34,6 +36,7 @@ class MainViewModel @Inject constructor(
   private val consoleMessagesStream: BehaviorSubject<ConsoleEvent> =
       BehaviorSubject.create()
   private val subscriptions: CompositeDisposable = CompositeDisposable()
+  private var currentExecution: Disposable = Disposables.empty()
 
   /* Lifecycle */
 
@@ -89,8 +92,8 @@ class MainViewModel @Inject constructor(
   /**
    * Loads the given Program into the ViewModel.
    */
-  fun loadProgram(info: ProgramInfo) {
-    subscriptions += info.load()
+  fun loadProgram(persisted: PersistedProgram) {
+    subscriptions += persisted.load()
         .async()
         .subscribe { program ->
           // Convert the Program's instructions into
@@ -102,11 +105,11 @@ class MainViewModel @Inject constructor(
 
           updateProgramState {
             it.copy(
-                savedId = info.id,
-                title = info.title,
+                savedId = persisted.id,
+                title = persisted.title,
                 instructions = mappedInstructions)
           }
-          notifyProgramEvent(ProgramEvent.Loaded(info.title))
+          notifyProgramEvent(ProgramEvent.Loaded(persisted.title))
         }
   }
 
@@ -137,6 +140,19 @@ class MainViewModel @Inject constructor(
         }
   }
 
+  fun toggleProgram() {
+    if (currentProgramState.running) {
+      stopProgram()
+    } else {
+      runProgram()
+    }
+  }
+
+  fun stopProgram() {
+    currentExecution.dispose()
+    updateProgramState { it.copy(running = false) }
+  }
+
   /**
    * Using the current List of Instructions, execute the Program
    * and notify subscribers of the other stream-based functions along the way.
@@ -145,7 +161,7 @@ class MainViewModel @Inject constructor(
     val program = compileInstructions()
 
     // Interpret the program, passing through events as side-effects
-    subscriptions += interpreter.execute(program, ExecutionEnvironment())
+    currentExecution = interpreter.execute(program, ExecutionEnvironment())
         .async()
         .doOnSubscribe {
           // Update the execution status
@@ -267,7 +283,7 @@ class MainViewModel @Inject constructor(
    */
   private inline fun updateProgramState(function: (ProgramState) -> ProgramState) {
     val currentState = programStateChanges.value
-    val newState = function.invoke(currentState)
+    val newState = function(currentState)
     programStateChanges.onNext(newState)
   }
 
@@ -283,7 +299,7 @@ class MainViewModel @Inject constructor(
    */
   private inline fun updateInstructions(function: (OrderedMap<InstructionItem>) -> Unit) {
     val currentInstructions = currentProgramState.instructions
-    function.invoke(currentInstructions)
+    function(currentInstructions)
     programStateChanges.onNext(currentProgramState.copy(instructions = currentInstructions))
   }
 

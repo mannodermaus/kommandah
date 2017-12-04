@@ -20,8 +20,8 @@ import de.mannodermaus.kommandah.managers.persistence.Base64Factory
 import de.mannodermaus.kommandah.managers.persistence.Base64String
 import de.mannodermaus.kommandah.managers.persistence.PersistenceManager
 import de.mannodermaus.kommandah.models.Instruction
+import de.mannodermaus.kommandah.models.PersistedProgram
 import de.mannodermaus.kommandah.models.Program
-import de.mannodermaus.kommandah.models.ProgramInfo
 import de.mannodermaus.kommandah.utils.extensions.decodeFromBase64
 import de.mannodermaus.kommandah.utils.extensions.encodeToBase64
 import io.reactivex.Flowable
@@ -43,18 +43,19 @@ class RoomPersistenceManager(
       .databaseBuilder(app, AppDatabase::class.java, "kommandah")
       .build()
 
-  override fun listRecentPrograms(count: Int): Flowable<out List<ProgramInfo>> {
+  override fun listRecentPrograms(count: Int): Flowable<out List<PersistedProgram>> {
     return db.programDao()
-        .listAll()
+        .listAll(count)
         .flatMapSingle {
+          // Convert each emission's database items into the
+          // type exposed to consumers of the API
           Flowable.fromIterable(it)
-              .take(count.toLong())
-              .map { toProgramInfo(it) }
+              .map { it.toPersistedProgram() }
               .toList()
         }
   }
 
-  override fun saveProgram(program: Program, id: Long?, title: String?): Single<ProgramInfo> =
+  override fun saveProgram(program: Program, id: Long?, title: String?): Single<PersistedProgram> =
       db.programDao()
           .upsert(
               RoomTableItem(
@@ -62,19 +63,19 @@ class RoomPersistenceManager(
                   updated = Instant.now(clock),
                   title = title ?: app.getString(R.string.main_untitledprogram),
                   data = serializeProgram(program, base64Factory)))
-          .map { toProgramInfo(it) }
+          .map { it.toPersistedProgram() }
 
-  private fun toProgramInfo(entity: RoomTableItem): ProgramInfo =
-      RoomProgramInfo(entity.id!!, entity.updated, entity.title, entity.data)
-
-  private inner class RoomProgramInfo(
+  private inner class RoomPersistedProgram(
       override val id: Long,
       override val updated: Instant,
       override val title: String,
-      private val data: Base64String) : ProgramInfo {
+      private val data: Base64String) : PersistedProgram {
 
     override fun load(): Single<Program> = Single.fromCallable { deserializeProgram(data, base64Factory) }
   }
+
+  private fun RoomTableItem.toPersistedProgram(): PersistedProgram =
+      RoomPersistedProgram(this.id!!, this.updated, this.title, this.data)
 }
 
 /* Entities & Helper Functions */
@@ -98,6 +99,7 @@ data class RoomTableItem(
  * Multiple instructions are joined together by semicolon ';'.
  */
 fun serializeProgram(p: Program, factory: Base64Factory): String = p.instructions
+    .filter { it.value != null }
     .map {
       val index = it.key
       val instruction = it.value
@@ -106,10 +108,14 @@ fun serializeProgram(p: Program, factory: Base64Factory): String = p.instruction
     .joinToString(separator = ";")
     .encodeToBase64(factory)
 
+/**
+ * Converts a string previously serialized by [serializeProgram]
+ * back to its [Program] representation.
+ */
 fun deserializeProgram(g: String, factory: Base64Factory): Program? {
   val instructions = if (g.isNotEmpty()) {
     g.decodeFromBase64(factory)
-        .split(delimiters = ";")
+        .split(delimiters = *arrayOf(";"))
         .map {
           val components = it.split(":")
           val index = components[0].toInt()
@@ -119,7 +125,7 @@ fun deserializeProgram(g: String, factory: Base64Factory): Program? {
         .associate { it }
 
   } else {
-    emptyMap<Int, Instruction?>()
+    emptyMap()
   }
   return Program(instructions)
 }
@@ -139,8 +145,8 @@ class RoomTypeConverters {
 
 @Dao
 abstract class ProgramDao {
-  @Query("SELECT * FROM data ORDER BY updated DESC")
-  abstract fun listAll(): Flowable<List<RoomTableItem>>
+  @Query("SELECT * FROM data ORDER BY updated DESC LIMIT (:limit)")
+  abstract fun listAll(limit: Int): Flowable<List<RoomTableItem>>
 
   @Insert(onConflict = OnConflictStrategy.IGNORE)
   protected abstract fun insertSync(entity: RoomTableItem): Long
@@ -172,7 +178,7 @@ abstract class ProgramDao {
 
 @Database(
     version = 1,
-    entities = arrayOf(RoomTableItem::class))
+    entities = [RoomTableItem::class])
 @TypeConverters(RoomTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
   abstract fun programDao(): ProgramDao

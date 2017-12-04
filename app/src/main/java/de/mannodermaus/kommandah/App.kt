@@ -18,7 +18,7 @@ open class App : Application(), HasActivityInjector {
 
   val component: AppComponent = createComponent()
 
-  open protected fun createComponent() = DaggerAppComponent.builder()
+  open protected fun createComponent(): AppComponent = DaggerAppComponent.builder()
       .buildTypeComponent(DaggerBuildTypeComponent.create())
       .appModule(AppModule(this))
       .build()

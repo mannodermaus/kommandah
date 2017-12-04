@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity(),
 
   private fun setupExecutionButton() {
     // Click Listener
-    disposables += buttonExecute.clicks().subscribe { viewModel.runProgram() }
+    disposables += buttonExecute.clicks().subscribe { viewModel.toggleProgram() }
 
     // Enabled-State Events
     disposables += viewModel.instructions().map { it.isNotEmpty() }.subscribe { hasItems ->

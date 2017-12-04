@@ -36,16 +36,28 @@ typealias OnInstructionCreated = (Instruction) -> Unit
  */
 typealias OnInstructionUpdated = (Instruction, Int, Int?) -> Unit
 
+/**
+ * Invoked upon submitting a change to a Program's title.
+ *
+ * Parameters:
+ * - String -> The new title of the Program
+ */
+typealias OnTitleUpdated = (String) -> Unit
+
 /* Functions */
 
-fun showEditTitleDialog(context: Context, prefill: CharSequence, callback: (String) -> Unit): MaterialDialog {
+/**
+ * Present the dialog in which the user may update a Program's title.
+ * The provided function is invoked upon submitting the update.
+ */
+fun showEditTitleDialog(context: Context, prefill: CharSequence, callback: OnTitleUpdated): MaterialDialog {
   return context.showDialog {
     title(R.string.main_dialog_editprogram_title)
     input(
         context.getString(R.string.main_dialog_editprogram_hint),
         prefill,
         false,
-        { _, text -> callback.invoke(text.toString()) })
+        { _, text -> callback(text.toString()) })
     positiveText(R.string.main_dialog_ok)
     negativeText(R.string.main_dialog_cancel)
   }
@@ -70,12 +82,12 @@ fun showCreateInstructionDialog(context: Context, callback: OnInstructionCreated
       val metadata = Instruction.metadataFromOperator(allChoices[which])
       if (metadata.hasParameters) {
         showParametrizedInstructionFollowupDialog(context, null, metadata) { instruction, _ ->
-          callback.invoke(instruction)
+          callback(instruction)
         }
         false
 
       } else {
-        callback.invoke(metadata.createInstruction())
+        callback(metadata.createInstruction())
         true
       }
     }
@@ -94,7 +106,7 @@ fun showEditInstructionDialog(
     showParametrizedInstructionFollowupDialog(context, position,
         instruction.metadata, instruction) { newInstruction, newPosition ->
       // Propagate the new state to the callback
-      callback.invoke(newInstruction, position, newPosition)
+      callback(newInstruction, position, newPosition)
     }
 
 /* Private */
@@ -177,7 +189,7 @@ private fun showParametrizedInstructionFollowupDialog(context: Context,
         val instruction = metadata.createInstruction(*inputValues)
         val newPosition = indexField?.editText?.text.toString().toIntOrNull()
 
-        callback.invoke(instruction, newPosition)
+        callback(instruction, newPosition)
         dialog.dismiss()
       }
     }
